@@ -1,7 +1,7 @@
 # Windy Project Manager Development Status
 
 Current Phase:
-Phase 4 — 数据层（已完成）
+Phase 5 — Project CRUD（已完成）
 
 Status:
 COMPLETE
@@ -12,6 +12,7 @@ Completed:
 - Phase 2：create-tauri-app 4.6.2 脚手架（react-ts 模板，D11：pnpm + React 19.2.8 + TS 5.8.3 + Vite 7.3.6 + Tauri 2.11.5，identifier `com.windy.project-mgr`）；`pnpm tauri dev` 启动验证通过（Vite 287ms ready，首次 470 crates 编译 1m57s，应用进程拉起无报错）；`pnpm tauri build` 通过（release 编译 2m21s，产出 MSI + NSIS 双 bundle）
 - Phase 3：目录结构建立并可编译：`src/{components,pages,lib,types}`（.gitkeep 占位）与 `src-tauri/src/{commands,project,scanner,git}`（各含职责声明的 mod.rs，已接入 lib.rs）；`cargo check` 与 `pnpm build` 双侧验证通过
 - Phase 4：数据层 TDD 完成（四个 red→green 切片）：`project::types`（Project / StoreError / Versioned）、`project::store`（Load/Save/Create/Update/Delete/Get + write_atomic + new_id/now_utc，仅 std）、`project::settings`（D6 同机制）；集成测试用真实临时目录，覆盖文件不存在 / 空文件 / JSON 损坏 / 版本不匹配 / 保存失败不损原文件 / 重复 ID / 删除不存在项目 / 删除不删目录
+- Phase 5：`project::dedup`（normalize_path / is_same_path / find_duplicate_by_path，D3 三变体 + 正斜杠变体）；`commands::project`（5 个 CRUD Tauri command 已注册入 invoke_handler，核心 `*_in` 函数以 data_dir 参数化可测，app_data_dir = `%APPDATA%\windy-project-mgr`）；查重拒绝覆盖 create 与 update（自排除）
 
 In Progress:
 - None
@@ -20,7 +21,7 @@ Blocked:
 - None
 
 Tests:
-- Passed: 23（cargo test 全量：lib 2 + tests/project_store 15 + tests/settings 6，2026-08-25）
+- Passed: 43（cargo test 全量：lib 2 + crud_commands 8 + dedup 12 + project_store 15 + settings 6，2026-08-25）
 - Failed: 0
 - Not Run: 0（前端 vitest 尚未引入，属后续票面）
 
@@ -33,7 +34,7 @@ Known Issues:
 - `%USERPROFILE%\.cargo\bin` 已加入用户 PATH，但当前会话已打开的 shell 不会自动刷新；验证时使用全路径，新开终端可直接使用 `rustc` / `cargo`
 
 Next Step:
-- Phase 5 — Project CRUD：Tauri command 层（create_project / get_project(s) / update_project / delete_project）+ 单元 / 集成测试；路径查重测试用例（重复路径 / 大小写变体 / 末尾分隔符变体，D3）；删除确认交互留待 Phase 8
+- Phase 6 — Project Scanner：项目类型 / 技术栈 / 活动检测（真实目录验证：Node/Python/Unknown/Git/Non-Git）+ 根目录启动脚本枚举（全部 `*.bat`/`*.cmd`/`*.ps1`，start > run > 字母序，D5）
 
 ---
 

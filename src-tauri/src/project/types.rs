@@ -32,6 +32,8 @@ pub enum StoreError {
     VersionMismatch { found: u32, expected: u32 },
     NotFound { id: String },
     DuplicateId { id: String },
+    /// 路径查重命中（D3）：拒绝并引导编辑已有记录，不合并。
+    DuplicatePath { path: String },
 }
 
 impl fmt::Display for StoreError {
@@ -46,6 +48,10 @@ impl fmt::Display for StoreError {
             }
             Self::NotFound { id } => write!(f, "project not found: {id}"),
             Self::DuplicateId { id } => write!(f, "duplicate project id: {id}"),
+            Self::DuplicatePath { path } => write!(
+                f,
+                "duplicate project path: {path} (edit the existing record instead)"
+            ),
         }
     }
 }

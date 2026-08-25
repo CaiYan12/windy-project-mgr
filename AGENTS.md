@@ -98,7 +98,7 @@ The self-check question: "If a fresh agent starts tomorrow and reads only AGENTS
 
 ## Repository Status
 
-This repository is **in development** (Phase 0~4 done; progress tracked in `docs/PLAN.MD` section 0). Top-level layout: documentation (`docs/`, `CONTEXT.md`, `TESTING.md`, `PROJECT_STATUS.md`, `CHANGELOG.md`) plus the app code — `src/` (React 19 + TS 5.8 + Vite 7 frontend, still template UI; `components/`, `pages/`, `lib/`, `types/` placeholders), `src-tauri/` (Tauri 2.11.5, identifier `com.windy.project-mgr`; Phase 4 implemented the data layer in `src/project/{types,store,settings}.rs` with 23 passing cargo tests; `commands/`, `scanner/`, `git/` still empty modules), and root Vite/TS configs. Documentation inventory:
+This repository is **in development** (Phase 0~5 done; progress tracked in `docs/PLAN.MD` section 0). Top-level layout: documentation (`docs/`, `CONTEXT.md`, `TESTING.md`, `PROJECT_STATUS.md`, `CHANGELOG.md`) plus the app code — `src/` (React 19 + TS 5.8 + Vite 7 frontend, still template UI; `components/`, `pages/`, `lib/`, `types/` placeholders), `src-tauri/` (Tauri 2.11.5, identifier `com.windy.project-mgr`; data layer in `src/project/{types,store,settings,dedup}.rs`, CRUD commands registered in `src/commands/project.rs`, 43 passing cargo tests; `scanner/`, `git/` still empty modules), and root Vite/TS configs. Documentation inventory:
 
 - `docs/Windy Project Manager - Primary Request&Plan Document.md` — original requirements and development rules (sections 1~28 baseline; sections 29~31 decision extensions). This is the authoritative spec.
 - `docs/PLAN.MD` — self-contained executable plan: decisions D1~D13, Phase 0~14, acceptance criteria, and the checkbox progress tracker (section 0).
@@ -142,7 +142,7 @@ Cross-cutting decisions that shape implementation (full text in `docs/PLAN.MD` s
 - **Run/Build/Open-in-editor are detached launches**: prefer `wt.exe`, fall back to `powershell -NoExit`, cwd = project path. The app reports only launch success/failure — it never captures exit codes or output, so "Build failed" in acceptance tests means the launch action failed, not the command.
 - **Path dedup on add**: normalize to absolute path, compare case-insensitively (Windows semantics); duplicates are rejected with a message, never merged.
 - **Theming**: single global stylesheet, all colors/spacing via CSS variables, light/dark sets switched by root `data-theme`; default follows system, manual choice persists to `settings.json` (`theme` field). Future theme presets = new variable sets, no mechanism change.
-- **Tauri command surface is intentionally minimal**: CRUD (5) + `scan_project` + `open_project`/`run_project`/`build_project` + `get_settings`/`update_settings`/`open_in_editor`. Do not add Service/Controller/Repository layers unless code size proves the need.
+- **Tauri command surface is intentionally minimal**: CRUD (5) + `scan_project` + `open_project`/`run_project`/`build_project` + `get_settings`/`update_settings`/`open_in_editor`. Do not add Service/Controller/Repository layers unless code size proves the need. Current wiring: the 5 CRUD commands are registered (Phase 5); command handlers keep testable `*_in(data_dir)` cores so tests run against temp dirs instead of `%APPDATA%`.
 
 ## Execution Protocol (Mandatory)
 

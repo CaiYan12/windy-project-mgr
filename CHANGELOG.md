@@ -6,6 +6,13 @@ MVP 完成前无正式版本号，变更记于 `Unreleased`。
 
 ## Unreleased
 
+### 2026-08-25 — Phase 5 Project CRUD
+
+- 新增 `project::dedup`：路径规范化（分隔符统一 / 去尾分隔符）+ 大小写不敏感比较（D3）
+- 新增 `commands::project`：`get_projects` / `get_project` / `create_project` / `update_project` / `delete_project` 五个 Tauri command 注册入 invoke_handler；核心逻辑 `*_in(data_dir)` 可测；数据目录 `%APPDATA%\windy-project-mgr`
+- create / update 均做路径查重拒绝（DuplicatePath，引导编辑已有记录，不合并）；删除仅删记录。决策记录：D3 字面仅约束“添加时”，此处将其唯一性不变量同等应用到 update（否则 Edit Dialog 改路径即可绕过查重；D10 允许编辑全部字段）；路径规范化含词法绝对化（相对路径按当前目录展开、`.`/`..` 解析），不访问文件系统
+- 新增测试 20 个（dedup 12 + crud_commands 8）；`cargo test` 43/43 通过
+
 ### 2026-08-25 — Phase 4 数据层（TDD）
 
 - 新增 `project::types`：`Project`（8 字段，camelCase 序列化）、`StoreError`（Io / Corrupted / VersionMismatch / NotFound / DuplicateId）、版本化文件外层 `Versioned<T>`

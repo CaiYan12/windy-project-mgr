@@ -1,4 +1,4 @@
-mod commands;
+pub mod commands;
 mod git;
 pub mod project;
 mod scanner;
@@ -13,7 +13,14 @@ fn greet(name: &str) -> String {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![greet])
+        .invoke_handler(tauri::generate_handler![
+            greet,
+            commands::project::get_projects,
+            commands::project::get_project,
+            commands::project::create_project,
+            commands::project::update_project,
+            commands::project::delete_project
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
