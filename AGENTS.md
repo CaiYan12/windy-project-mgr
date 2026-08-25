@@ -98,7 +98,7 @@ The self-check question: "If a fresh agent starts tomorrow and reads only AGENTS
 
 ## Repository Status
 
-This repository is **planning-complete, code not yet initialized** (Phase 0~1 done; progress tracked in `docs/PLAN.MD` section 0). It currently contains only documentation:
+This repository is **scaffolded, business code not yet started** (Phase 0~2 done; progress tracked in `docs/PLAN.MD` section 0). Top-level layout: documentation (`docs/`, `CONTEXT.md`, `TESTING.md`, `PROJECT_STATUS.md`, `CHANGELOG.md`) plus the Phase 2 scaffold — `src/` (React 19 + TS 5.8 + Vite 7 frontend, template default), `src-tauri/` (Tauri 2.11.5, identifier `com.windy.project-mgr`), and root Vite/TS configs. Documentation inventory:
 
 - `docs/Windy Project Manager - Primary Request&Plan Document.md` — original requirements and development rules (sections 1~28 baseline; sections 29~31 decision extensions). This is the authoritative spec.
 - `docs/PLAN.MD` — self-contained executable plan: decisions D1~D13, Phase 0~14, acceptance criteria, and the checkbox progress tracker (section 0).
@@ -114,7 +114,7 @@ Before the first of coding work, read `docs/PLAN.MD` first; it supersedes the pr
 
 ## Commands
 
-All commands below are **planned and not yet runnable** until Phase 2 (project scaffolding) completes. Package manager is pnpm by decision D11; never substitute npm/yarn.
+All commands below are **runnable** since Phase 2 (project scaffolding) completed. Package manager is pnpm by decision D11; never substitute npm/yarn. Note: pnpm build scripts are allowlisted via `pnpm.onlyBuiltDependencies` in `package.json` (esbuild).
 
 ```powershell
 pnpm install                 # install frontend deps
@@ -125,6 +125,8 @@ cargo test <test_name>       # run a single Rust test
 pnpm vitest run              # frontend pure-logic tests only (search filter, path dedup normalization, card data assembly)
 pnpm vitest run <file>       # run a single frontend test file
 ```
+
+The first three rows are runnable now; `cargo test` has no tests yet until the Phase 4 data layer; the `vitest` rows become runnable once vitest is added as a dev dependency (planned with the frontend pure-logic tests, not yet installed — do not run them until then).
 
 Rust is installed on the reference machine: rustup 1.29.0 with `stable-x86_64-pc-windows-msvc` (rustc / cargo 1.98.0, verified 2026-08-25 in Phase 0). Node v24.18.0, pnpm 10.26.2, Git 2.48.1, and VS2022 with VC x86/x64 are present; full audit table in `PROJECT_STATUS.md`. Note: shells opened before the install may need `%USERPROFILE%\.cargo\bin` on PATH or a restart.
 

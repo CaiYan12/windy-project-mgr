@@ -6,7 +6,7 @@
 
 ## 0. 执行进度追踪（Checkbox）
 
-> **执行进度：2 / 15 Phase 完成 · 5 / 34 子任务（最后更新：2026-08-25）**
+> **执行进度：3 / 15 Phase 完成 · 8 / 34 子任务（最后更新：2026-08-25）**
 
 ### Phase 0 环境审计
 
@@ -21,9 +21,9 @@
 
 ### Phase 2 工程初始化
 
-- [ ] create-tauri-app 工程创建（pnpm + React + TS + Vite + Tauri 2，D11）
-- [ ] `pnpm tauri dev` 启动验证通过
-- [ ] production build 验证通过
+- [x] create-tauri-app 工程创建（pnpm + React + TS + Vite + Tauri 2，D11）
+- [x] `pnpm tauri dev` 启动验证通过
+- [x] production build 验证通过
 
 ### Phase 3 基础目录
 

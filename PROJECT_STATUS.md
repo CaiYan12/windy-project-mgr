@@ -1,7 +1,7 @@
 # Windy Project Manager Development Status
 
 Current Phase:
-Phase 1 — 项目规划（已完成）
+Phase 2 — 工程初始化（已完成）
 
 Status:
 COMPLETE
@@ -9,6 +9,7 @@ COMPLETE
 Completed:
 - Phase 0：rustup / stable 工具链安装与验证，全环境审计实测并记入下表
 - Phase 1：`CONTEXT.md` 术语表、`CHANGELOG.md`、`TESTING.md` 验收清单骨架、`docs/adr/0001~0003` 三份 ADR 落盘（均验证：存在 + 严格 UTF-8 无乱码）
+- Phase 2：create-tauri-app 4.6.2 脚手架（react-ts 模板，D11：pnpm + React 19.2.8 + TS 5.8.3 + Vite 7.3.6 + Tauri 2.11.5，identifier `com.windy.project-mgr`）；`pnpm tauri dev` 启动验证通过（Vite 287ms ready，首次 470 crates 编译 1m57s，应用进程拉起无报错）；`pnpm tauri build` 通过（release 编译 2m21s，产出 MSI + NSIS 双 bundle）
 
 In Progress:
 - None
@@ -22,15 +23,15 @@ Tests:
 - Not Run: N/A（Phase 0 无测试项）
 
 Build:
-- Development: N/A
-- Production: N/A
+- Development: PASS（`pnpm tauri dev` 启动验证，2026-08-25）
+- Production: PASS（`pnpm tauri build` 双 bundle 产出，2026-08-25；体积实测属 Phase 13 票面）
 
 Known Issues:
 - winget 安装 Rustlang.Rustup 时，rustup-init 安装器本体成功，但默认工具链自动安装失败（安装程序退出码 1）；已通过 `rustup default stable` 补装解决
 - `%USERPROFILE%\.cargo\bin` 已加入用户 PATH，但当前会话已打开的 shell 不会自动刷新；验证时使用全路径，新开终端可直接使用 `rustc` / `cargo`
 
 Next Step:
-- Phase 2 — 工程初始化（create-tauri-app：pnpm + React + TS + Vite + Tauri 2；验证 `pnpm tauri dev` 与 production build，见 docs/PLAN.MD 第 5 节）
+- Phase 3 — 基础目录（`src/` 与 `src-tauri/src/` 目录结构：脚手架已产出基础结构，按 PLAN.MD 第 5 节裁剪 / 补充为 commands/project/scanner/git 布局并确认可编译）
 
 ---
 
@@ -44,7 +45,7 @@ Next Step:
 | Rust | rustc 1.98.0 (88d9e12ae 2026-08-18)，stable 工具链 | `rustc --version` |
 | Cargo | cargo 1.98.0 (797e8a9bc 2026-08-05) | `cargo --version` |
 | rustup | 1.29.0 (28d1352db 2026-03-05)，默认工具链 `stable-x86_64-pc-windows-msvc`，target `x86_64-pc-windows-msvc` | `rustup show` |
-| Tauri CLI | 未安装（计划内：Phase 2 随工程骨架以 `@tauri-apps/cli` devDependency 提供，经 `pnpm tauri` 调用） | 预检 |
+| Tauri CLI | `@tauri-apps/cli` 2.11.4（工程 devDependency，经 `pnpm tauri` 调用；Tauri 运行时 2.11.5） | `pnpm install` 输出 |
 | Git | 2.48.1.windows.1 | `git --version` |
 | MSVC C++ 构建工具 | Visual Studio Community 2022（17.14.37216.2，`C:\Program Files\Microsoft Visual Studio\2022\Community`），vswhere 确认含 `Microsoft.VisualStudio.Component.VC.Tools.x86.x64` | `vswhere -requires VC.Tools.x86.x64` |
 | WebView2 | Windows 11 内置，无需安装 | 系统事实 |

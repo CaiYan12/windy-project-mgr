@@ -39,7 +39,7 @@ Rust (Tauri 2)
 
 ## 当前状态
 
-项目处于**规划完成、尚未初始化代码**阶段。开发将按 `docs/PLAN.MD` 的 Phase 0~14 顺序执行，进度由该文档第 0 节的 Checkbox 清单追踪。
+项目已完成规划与环境准备，**工程骨架已初始化（Phase 0~2）**，业务代码尚未开始。开发按 `docs/PLAN.MD` 的 Phase 0~14 顺序执行，进度由该文档第 0 节的 Checkbox 清单追踪。
 
 工具链前置（2026-08-25 实测）：Node v24.18.0、pnpm 10.26.2、Git 2.48.1、Visual Studio Community 2022（VC x86/x64）已就绪；Rust 已安装（rustup 1.29.0，rustc / cargo 1.98.0，stable-x86_64-pc-windows-msvc），完整审计表见 `PROJECT_STATUS.md`。
 

@@ -6,6 +6,12 @@ MVP 完成前无正式版本号，变更记于 `Unreleased`。
 
 ## Unreleased
 
+### 2026-08-25 — Phase 2 工程初始化
+
+- create-tauri-app 4.6.2 脚手架：react-ts 模板（D11：pnpm + React 19.2.8 + TypeScript 5.8.3 + Vite 7.3.6 + Tauri 2.11.5）
+- 依赖锁定 `pnpm-lock.yaml`；esbuild 构建脚本经 `pnpm.onlyBuiltDependencies` 白名单化（pnpm 10 默认拦截）
+- `pnpm tauri dev` 启动验证通过；`pnpm tauri build` 产出 MSI + NSIS 双 bundle
+
 ### 2026-08-25 — Phase 1 项目规划
 
 - 新增 `CONTEXT.md`：领域术语表（D13）
