@@ -23,7 +23,7 @@
 | 7 Git Scanner | `1c1f255` | `git::scan_git` + `scan_git_with`，系统 Git CLI 离线扫描（D8），真实临时仓库测试 11 个，71 测试 |
 | 8 Dashboard UI | `468e934` | scan_project/list_scripts command + 全部 Dashboard 组件（D2/D5/D7/D9/D10），vitest 22 + cargo 75 测试，`pnpm build` 通过 |
 | 9 Project Detail UI | `f8067a7` | `pages/ProjectDetail.tsx` 七分区 + 降级态；`selectedId` 视图切换（无路由库）；`shortHash`（TDD，vitest 22→25）；`detect_project_type` 返回 `C#`（红→绿） |
-| 10 Run/Build/Open/Editor | （见 `git log`） | `launch` 模块（D4：`wt.exe` 优先回退 `powershell -NoExit`，detached 只报启动成败）+ `commands/actions.rs` 六个 command（D6 settings/editor）；TDD 红→绿：`tests/launch.rs` 15 + `tests/actions_commands.rs` 4（cargo 75→94）；运行时探针经真实 IPC 验证 10/10 PASS（探针已移除）；零新依赖 |
+| 10 Run/Build/Open/Editor | `f36ef4e` | `launch` 模块（D4：`wt.exe` 优先回退 `powershell -NoExit`，detached 只报启动成败）+ `commands/actions.rs` 六个 command（D6 settings/editor）；TDD 红→绿：`tests/launch.rs` 15 + `tests/actions_commands.rs` 4（cargo 75→94）；运行时探针经真实 IPC 验证 10/10 PASS（探针已移除）；零新依赖 |
 
 ## 下一票：Phase 11 — UI Polish + 主题系统（PLAN.MD 第 0 节三个复选框）
 
