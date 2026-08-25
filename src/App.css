@@ -1,6 +1,8 @@
 /* Windy Project Manager — 单一全局样式表（ADR 0003，D1）。
-   所有颜色 / 间距 / 圆角 / 状态色走 CSS 变量；亮 / 暗两套变量集，
-   本阶段默认跟随系统（prefers-color-scheme）；手动 data-theme 切换与持久化属 Phase 11。 */
+   所有颜色 / 间距 / 圆角 / 状态色走 CSS 变量；
+   亮 / 暗两套变量集由根节点 `data-theme` 决定：
+   - `data-theme="light"` 强制亮；`data-theme="dark"` 强制暗；
+   - `data-theme="system"`（或未设置）跟随系统（prefers-color-scheme）。 */
 
 :root {
   /* 色板（亮）：冷调纸面 + 风青（wind-teal）强调 */
@@ -39,10 +41,42 @@
   /* 字体 */
   --font-body: "Segoe UI", system-ui, -apple-system, sans-serif;
   --font-mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+
+  /* 主题预览色样（仅 Settings Dialog 展示用，故意固定，不随主题切换） */
+  --swatch-light: #f3f5f6;
+  --swatch-dark: #14181a;
 }
 
+/* 强制暗色：`data-theme="dark"` 始终生效，覆盖系统偏好。
+   【注意】暗色变量集与下方 `@media prefers-color-scheme: dark` 块保持同步（纯 CSS
+   无法复用同一变量块；两者任何一处改动须一致）。 */
+:root[data-theme="dark"] {
+  --bg: #14181a;
+  --surface: #1c2224;
+  --sunken: #232b2e;
+  --ink: #e6ecee;
+  --muted: #93a1a6;
+  --line: #313b3f;
+  --accent: #35b4c4;
+  --accent-hover: #52c4d2;
+  --accent-soft: #12383f;
+  --on-accent: #062226;
+  --ok: #57b380;
+  --warn: #d99a2b;
+  --danger: #e0655c;
+  --danger-hover: #e8837b;
+  --on-danger: #2a0e0c;
+  --overlay: rgba(0, 0, 0, 0.55);
+  --focus: #35b4c4;
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-2: 0 6px 24px rgba(0, 0, 0, 0.45);
+}
+
+/* 跟随系统：`data-theme="system"`（或未设置）时按系统偏好切暗；
+   显式 `data-theme="light"` 被排除，强制保持亮色。
+   暗色变量集与上方 `:root[data-theme="dark"]` 块保持一致。 */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg: #14181a;
     --surface: #1c2224;
     --sunken: #232b2e;
@@ -82,6 +116,8 @@ body {
   color: var(--ink);
   background: var(--bg);
   overflow: hidden;
+  /* 主题切换的柔和过渡（遵守 reduced-motion 兜底） */
+  transition: background-color 200ms ease, color 200ms ease;
 }
 
 .mono {
@@ -733,21 +769,103 @@ button:focus-visible {
 .settings-rows {
   display: flex;
   flex-direction: column;
+  gap: var(--sp-4);
 }
 
-.settings-row {
+.settings-section-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin: 0 0 var(--sp-2);
+}
+
+/* 主题单选组（D1：亮 / 暗 / 跟随系统） */
+.theme-options {
   display: flex;
-  justify-content: space-between;
-  padding: var(--sp-3) 0;
-  border-bottom: 1px solid var(--line);
+  gap: var(--sp-2);
 }
 
-.settings-row:last-child {
-  border-bottom: none;
+.theme-option {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  cursor: pointer;
 }
 
-.settings-name {
+.theme-option:has(input:checked) {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.theme-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* 主题色样：当前量的调色板示意（值来自固定预览变量，非主题变量） */
+.theme-swatch {
+  width: 100%;
+  height: 28px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+}
+
+.theme-swatch.light {
+  background: var(--swatch-light);
+}
+
+.theme-swatch.dark {
+  background: var(--swatch-dark);
+}
+
+.theme-swatch.system {
+  background: linear-gradient(to right, var(--swatch-light) 50%, var(--swatch-dark) 50%);
+}
+
+.theme-label {
+  font-size: 12.5px;
   font-weight: 600;
+  color: var(--ink);
+}
+
+/* 编辑器命令输入（D6：预设 datalist + 自定义） */
+.settings-field label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: var(--sp-1);
+}
+
+.settings-field input {
+  width: 100%;
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--bg);
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+}
+
+.settings-hint {
+  margin: var(--sp-1) 0 0;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.settings-error {
+  margin: 0;
+  color: var(--danger);
+  font-size: 13px;
 }
 
 /* ---------- Project Detail（Phase 9） ---------- */

@@ -14,11 +14,14 @@ import {
   buildProject,
   deleteProject,
   getProjects,
+  getSettings,
   openInEditor,
   openProject,
   runProject,
   scanProject,
+  type AppSettings,
 } from "./lib/api";
+import { applyTheme, isValidTheme } from "./lib/theme";
 import type { Project, ScanState } from "./types/project";
 import "./App.css";
 
@@ -38,8 +41,22 @@ function App() {
   const [toast, setToast] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [settings, setSettings] = useState<AppSettings | null>(null);
 
   const selected = selectedId ? projects.find((p) => p.id === selectedId) ?? null : null;
+
+  // 启动加载设置（主题持久化 D1），失败回退默认（跟随系统 + 空编辑器）。
+  useEffect(() => {
+    getSettings().then(setSettings).catch(() => {
+      setSettings({ theme: "system", editorCommand: "" });
+    });
+  }, []);
+
+  // 应用主题到根节点：settings 到场后按持久化值设置 data-theme（重启保留）。
+  useEffect(() => {
+    const theme = settings && isValidTheme(settings.theme) ? settings.theme : "system";
+    applyTheme(document.documentElement, theme);
+  }, [settings]);
 
   const showToast = useCallback((message: string) => {
     setToast(message);
@@ -225,7 +242,13 @@ function App() {
           onConfirm={() => handleDelete(dialog.project)}
         />
       )}
-      {dialog?.kind === "settings" && <SettingsDialog onClose={() => setDialog(null)} />}
+      {dialog?.kind === "settings" && (
+        <SettingsDialog
+          settings={settings}
+          onClose={() => setDialog(null)}
+          onSaved={(s) => setSettings(s)}
+        />
+      )}
 
       {toast && (
         <div className="toast" role="alert">

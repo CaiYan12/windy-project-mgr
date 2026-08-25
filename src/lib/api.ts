@@ -1,6 +1,6 @@
 // Tauri IPC 封装：与 §2.5 command 面对应；错误统一为字符串（后端约定）。
-// 注：get_settings / update_settings 的前端接入属 Phase 11（设置 Dialog）；
-// 其余六个操作 command 后端已于 Phase 10 实现（D4 / D6）。
+// 六个操作 command 后端已于 Phase 10 实现（D4 / D6）；`get_settings` /
+// `update_settings` 前端封装于 Phase 11（D1 主题持久化 + D6 设置 Dialog）接入。
 
 import { invoke } from "@tauri-apps/api/core";
 import type {
@@ -9,6 +9,12 @@ import type {
   ProjectMetadata,
   StartupScript,
 } from "../types/project";
+
+/** 应用设置（D6 settings.json）：编辑器命令 + 主题选择。 */
+export interface AppSettings {
+  editorCommand: string;
+  theme: string;
+}
 
 export function getProjects(): Promise<Project[]> {
   return invoke<Project[]>("get_projects");
@@ -48,4 +54,12 @@ export function buildProject(path: string, command: string): Promise<void> {
 
 export function openInEditor(path: string): Promise<void> {
   return invoke<void>("open_in_editor", { path });
+}
+
+export function getSettings(): Promise<AppSettings> {
+  return invoke<AppSettings>("get_settings");
+}
+
+export function updateSettings(settings: AppSettings): Promise<AppSettings> {
+  return invoke<AppSettings>("update_settings", { settings });
 }

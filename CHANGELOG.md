@@ -6,6 +6,14 @@ MVP 完成前无正式版本号，变更记于 `Unreleased`。
 
 ## Unreleased
 
+### 2026-08-25 — Phase 11 UI Polish + 主题系统
+
+- **主题系统（D1 / ADR 0003）**：`App.css` 将暗色变量集拆为 `:root[data-theme="dark"]`（强制暗，覆盖系统偏好）与 `@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) }`（跟随系统，强制亮的 `data-theme="light"` 被排除）；三态 `system` / `light` / `dark` 齐全。新增 `lib/theme.ts`（`Theme` 类型 / `isValidTheme` / `applyTheme` / `THEMES` / `EDITOR_PRESETS`，纯逻辑 TDD 红→绿 4 个 vitest）
+- **设置 Dialog（D6）**：`SettingsDialog` 由只读占位改为可编辑表面 — 主题单选组（跟随系统 / 亮 / 暗，含固定预览色样）+ 编辑器命令 `datalist` 预设（`code` / `code-insiders` / `cursor`）+ 自由输入 + 「Not configured / Running」提示；保存经 `update_settings` 持久化（编辑清空 → 保留 `Editor not configured` 语义，后端未改）
+- **接线**：`lib/api.ts` 新增 `getSettings` / `updateSettings` + `AppSettings` 类型；`App.tsx` 启动 `getSettings()` 并按持久化 `theme` 应用 `data-theme`（重启保留），`onSaved` 更新状态实时切换
+- **运行时验证**：临时前端探针在内置 WebView2 内实测 D1 全链路 — 预置 `theme=dark` 启动后 `data-theme=dark` 生效、`--bg` 解析为暗色 `#14181a`；经真实 IPC `update_settings` 保存后 `get_settings` 往返一致（持久化验证）；探针代码验收后已移除
+- **验证**：`pnpm vitest run` 29/29（原 25 + theme 4）、`pnpm build`（tsc 全量）通过、`cargo test` 94/94 无回归；零新依赖（纯 CSS 变量 + React 内置 hooks，无新 npm 包）；双轴评审修正：移除未用的 `data-swatch` 属性、为 CSS 两处暗色变量块加同步注释
+
 ### 2026-08-25 — Phase 10 Run / Build / Open / Editor
 
 - **Rust**：新增 `launch` 模块（D4 / ADR 0002）：`LaunchPlan` 纯数据计划（`wt_plan` / `ps_plan` / `editor_plan` / `open_dir_plan`）+ `spawn_plan`（detached 拉起，只报启动成败，不采集退出码与输出）+ `run_in_terminal`（优先 `wt.exe`，拉起失败回退 `powershell -NoExit`，`cwd = project.path`）+ `open_dir`（explorer）+ `open_in_editor`（`editorCommand` 为空 → `Editor not configured`，未配置检查先于路径检查）；二进制名可注入（`run_in_terminal_with`）便于测试
