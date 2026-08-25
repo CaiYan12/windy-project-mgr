@@ -6,7 +6,7 @@
 
 ## 0. 执行进度追踪（Checkbox）
 
-> **执行进度：10 / 15 Phase 完成 · 24 / 34 子任务（最后更新：2026-08-25）**
+> **执行进度：11 / 15 Phase 完成 · 26 / 34 子任务（最后更新：2026-08-25）**
 
 ### Phase 0 环境审计
 
@@ -64,8 +64,8 @@
 
 ### Phase 10 Run / Build / Open / Editor
 
-- [ ] `open_project` / `run_project` / `build_project` 按 D4 语义（wt 优先 / PowerShell 回退，只报启动成败）
-- [ ] `get_settings` / `update_settings` / `open_in_editor` 实现并测试（D6）
+- [x] `open_project` / `run_project` / `build_project` 按 D4 语义（wt 优先 / PowerShell 回退，只报启动成败）
+- [x] `get_settings` / `update_settings` / `open_in_editor` 实现并测试（D6）
 
 ### Phase 11 UI Polish + 主题系统
 

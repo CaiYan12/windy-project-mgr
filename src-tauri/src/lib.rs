@@ -1,5 +1,6 @@
 pub mod commands;
 pub mod git;
+pub mod launch;
 pub mod project;
 pub mod scanner;
 
@@ -16,7 +17,13 @@ pub fn run() {
             commands::project::update_project,
             commands::project::delete_project,
             commands::scan::scan_project,
-            commands::scan::list_scripts
+            commands::scan::list_scripts,
+            commands::actions::get_settings,
+            commands::actions::update_settings,
+            commands::actions::open_project,
+            commands::actions::run_project,
+            commands::actions::build_project,
+            commands::actions::open_in_editor
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

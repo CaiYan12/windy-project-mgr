@@ -6,6 +6,15 @@ MVP 完成前无正式版本号，变更记于 `Unreleased`。
 
 ## Unreleased
 
+### 2026-08-25 — Phase 10 Run / Build / Open / Editor
+
+- **Rust**：新增 `launch` 模块（D4 / ADR 0002）：`LaunchPlan` 纯数据计划（`wt_plan` / `ps_plan` / `editor_plan` / `open_dir_plan`）+ `spawn_plan`（detached 拉起，只报启动成败，不采集退出码与输出）+ `run_in_terminal`（优先 `wt.exe`，拉起失败回退 `powershell -NoExit`，`cwd = project.path`）+ `open_dir`（explorer）+ `open_in_editor`（`editorCommand` 为空 → `Editor not configured`，未配置检查先于路径检查）；二进制名可注入（`run_in_terminal_with`）便于测试
+- **Rust**：新增 `commands/actions.rs`：`get_settings` / `update_settings`（`*_in(data_dir)` 可测核心，复用 `Settings` 原子写）/ `open_project` / `run_project` / `build_project` / `open_in_editor`（读 `settings.json` 的 `editorCommand`）六个 Tauri command 注册入 invoke_handler（§2.5 command 全集至此完整）
+- **测试**（TDD 红→绿）：`tests/launch.rs` 15 个（计划形态纯断言 + 真实进程拉起：`hostname` 充当终端/编辑器替身、不存在二进制验证回退与失败、无效路径 / 空命令 / 未配置编辑器错误）+ `tests/actions_commands.rs` 4 个（设置默认值 / 持久化往返 / 数据目录自动创建 / 损坏可诊断）；`cargo test` 75→94
+- **前端**：`lib/api.ts` 注释更新（六个操作 command 后端已实现；`get_settings` / `update_settings` 前端接入属 Phase 11）；无其它前端改动（Phase 8 封装与 UI 入口原样复用）
+- **运行时验证**：WebView2 Runtime 151 对提权宿主禁用 `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS`（CDP 无法开启，证据：wry#1782 / WebView2Feedback#5640），改用临时前端探针经真实 IPC 在内置 WebView2 内逐一调用六个 command：10/10 PASS（默认设置 / 持久化往返 / open / run / build / editor 拉起 / 未配置与无效路径与空命令错误文案）；探针代码验收后已移除
+- **验证**：`cargo test` 94/94、`pnpm vitest run` 25/25、`pnpm build`（tsc 全量）通过；零新依赖（纯 `std::process::Command`）；双轴评审修正：`LaunchPlan` 未用派生移除、`wt` → `wt.exe` 对齐规格字面
+
 ### 2026-08-25 — Phase 9 Project Detail UI
 
 - **前端**：新增 `src/pages/ProjectDetail.tsx`（七分区：Header / Overview / Technology / Git / Recent Commits / Activity / Actions；只消费传入 `scan`，不发起扫描不持久化，D2）；降级态全部可见：`git = null` → `No Git repository`、空仓库 → `No commits yet`、`status = unknown` 状态点与文案、`projectType = null` → `Unknown project type`、`activity.lastModifiedAt = null` → `No recent activity`、loading 骨架、error + Retry；Actions：Open / Run / Build（未配置禁用 + D4 文案）/ Open in editor（D6，后端属 Phase 10，未注册时 Toast 报错为预期过渡态）/ Refresh（调 `scan_project` 单项目重扫，仅内存）/ Edit / Delete（复用 `EditProjectDialog` / `ConfirmDialog`）

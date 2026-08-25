@@ -1,7 +1,6 @@
 // Tauri IPC 封装：与 §2.5 command 面对应；错误统一为字符串（后端约定）。
-// 注：run_project / build_project / open_project / open_in_editor /
-// get_settings / update_settings 的后端属 Phase 10，此处先行封装供 UI 接入，
-// 命令未注册时调用会以错误字符串返回并由界面提示（不崩溃）。
+// 注：get_settings / update_settings 的前端接入属 Phase 11（设置 Dialog）；
+// 其余六个操作 command 后端已于 Phase 10 实现（D4 / D6）。
 
 import { invoke } from "@tauri-apps/api/core";
 import type {
