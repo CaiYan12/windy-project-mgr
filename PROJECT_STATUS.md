@@ -1,7 +1,7 @@
 # Windy Project Manager Development Status
 
 Current Phase:
-Phase 6 — Project Scanner（已完成）
+Phase 7 — Git Scanner（已完成）
 
 Status:
 COMPLETE
@@ -14,6 +14,7 @@ Completed:
 - Phase 4：数据层 TDD 完成（四个 red→green 切片）：`project::types`（Project / StoreError / Versioned）、`project::store`（Load/Save/Create/Update/Delete/Get + write_atomic + new_id/now_utc，仅 std）、`project::settings`（D6 同机制）；集成测试用真实临时目录，覆盖文件不存在 / 空文件 / JSON 损坏 / 版本不匹配 / 保存失败不损原文件 / 重复 ID / 删除不存在项目 / 删除不删目录
 - Phase 5：`project::dedup`（normalize_path / is_same_path / find_duplicate_by_path，D3 三变体 + 正斜杠变体）；`commands::project`（5 个 CRUD Tauri command 已注册入 invoke_handler，核心 `*_in` 函数以 data_dir 参数化可测，app_data_dir = `%APPDATA%\windy-project-mgr`）；查重拒绝覆盖 create 与 update（自排除）
 - Phase 6：`scanner` 模块实现：detect_project_type（Node/Python/Rust/Java/CSharp/Unknown）、detect_tech_stack（11 条特征规则）、detect_activity（根目录最新 mtime，单项失败不阻断）、list_startup_scripts（D5：start > run > 字母序，不递归）；路径不存在 / 无权限可诊断错误；真实目录验证：本仓库根目录（Node + pnpm/TS/Vite）与 src-tauri（Rust）实测通过；Git/Non-Git 目录的 Git 元数据扫描属 Phase 7
+- Phase 7：`git` 模块实现（TDD，七个垂直切片）：`scan_git(path) -> Result<Option<GitMetadata>, GitError>`（非仓库 Ok(None)；路径不存在 / git 不可用可诊断报错）+ `scan_git_with` 可测核心；调用系统 Git CLI（std::process::Command，零新依赖，绝不 `git fetch`）；D8 全部边界：分支（含 `detached@<短hash>`）、三态 status（porcelain 失败 → Unknown，changed_files 计入 untracked）、ahead/behind 基于本地 `@{u}`（无上游 = 0）、recentCommits 最近 10 条（%x1f 分隔解析）、空仓库 lastCommit = None；新增集成测试 11 个（真实临时 git 仓库：非仓库 / 路径不存在 / git 不可用 / 空仓库 / 单提交 / modified / untracked / 12 提交上限 / 无上游 / 本地上游 ahead/behind / detached HEAD）
 
 In Progress:
 - None
@@ -22,7 +23,7 @@ Blocked:
 - None
 
 Tests:
-- Passed: 60（cargo test 全量：lib 2 + crud_commands 8 + dedup 12 + project_store 15 + real_repo 2 + scanner 15 + settings 6，2026-08-25）
+- Passed: 71（cargo test 全量：lib 2 + crud_commands 8 + dedup 12 + git_scanner 11 + project_store 15 + real_repo 2 + scanner 15 + settings 6，2026-08-25）
 - Failed: 0
 - Not Run: 0（前端 vitest 尚未引入，属后续票面）
 
@@ -35,7 +36,7 @@ Known Issues:
 - `%USERPROFILE%\.cargo\bin` 已加入用户 PATH，但当前会话已打开的 shell 不会自动刷新；验证时使用全路径，新开终端可直接使用 `rustc` / `cargo`
 
 Next Step:
-- Phase 7 — Git Scanner：调用系统 Git CLI（绝不 fetch）；按 D8 边界（无上游 ahead/behind=0 不显示、空仓库、detached@<短hash>、三态 status、最近 10 条）；专项测试：无上游分支 / 空仓库 / detached HEAD，真实临时仓库
+- Phase 8 — Dashboard UI：卡片骨架先行 + 并发 `scan_project` 逐卡填充（D2）；Sidebar 标签过滤（D9）；Search 四字段过滤（D7）；两步 Add Dialog（D10/D5）；卡片 More 菜单含编辑器入口（D6）；删除确认 Dialog。届时将 `git::scan_git` 接入 `scan_project` command 组装 ProjectMetadata
 
 ---
 

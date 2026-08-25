@@ -1,5 +1,5 @@
 pub mod commands;
-mod git;
+pub mod git;
 pub mod project;
 pub mod scanner;
 

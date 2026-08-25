@@ -6,7 +6,7 @@
 
 ## 0. 执行进度追踪（Checkbox）
 
-> **执行进度：7 / 15 Phase 完成 · 15 / 34 子任务（最后更新：2026-08-25）**
+> **执行进度：8 / 15 Phase 完成 · 17 / 34 子任务（最后更新：2026-08-25）**
 
 ### Phase 0 环境审计
 
@@ -46,8 +46,8 @@
 
 ### Phase 7 Git Scanner
 
-- [ ] 按 D8 边界实现（不联网、三态 status、最近 10 条、空仓库 / detached HEAD 降级），真实仓库验证通过
-- [ ] 专项测试通过：无上游分支 / 空仓库 / detached HEAD
+- [x] 按 D8 边界实现（不联网、三态 status、最近 10 条、空仓库 / detached HEAD 降级），真实仓库验证通过
+- [x] 专项测试通过：无上游分支 / 空仓库 / detached HEAD
 
 ### Phase 8 Dashboard UI
 

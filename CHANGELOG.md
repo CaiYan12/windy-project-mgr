@@ -6,6 +6,14 @@ MVP 完成前无正式版本号，变更记于 `Unreleased`。
 
 ## Unreleased
 
+### 2026-08-25 — Phase 7 Git Scanner（TDD）
+
+- 新增 `git` 模块：`scan_git(path) -> Result<Option<GitMetadata>, GitError>`（非仓库返回 `Ok(None)`）+ `scan_git_with(path, git_bin)` 可测核心（沿用 `*_in` 可测模式）；`lib.rs` 中 `git` 模块改为 `pub`
+- 调用系统 Git CLI（`std::process::Command`，零新依赖），全程离线（绝不 `git fetch`，符合 D8 / 增量验收 5）
+- D8 边界全部落实：分支名（`symbolic-ref`，detached HEAD → `detached@<短hash>`）；三态 status（`status --porcelain`，失败 → Unknown；口径：changed_files 计入全部条目含 untracked）；ahead/behind 基于本地 `@{u}`（无上游 = 0/0）；recentCommits 最近 10 条（`%x1f` 分隔解析）；空仓库 `last_commit = None`、`recent_commits = []`
+- 可诊断错误：`GitError::{PathNotFound, GitNotFound, GitFailed}`；git 不可用不导致崩溃；`GitMetadata` / `GitCommit` / `GitStatus` 字段与 PLAN §2.3 逐一对应（camelCase 序列化）
+- 新增集成测试 11 个（真实临时 `git init` 仓库，D12：非仓库 / 路径不存在 / git 不可用 / 空仓库 / 单提交 / modified / untracked / 12 提交上限 10 / 无上游 / 本地上游 ahead/behind / detached HEAD）；`cargo test` 71/71 通过
+
 ### 2026-08-25 — Phase 6 Project Scanner
 
 - 新增 `scanner` 模块：`detect_project_type`（Node/Python/Rust/Java/CSharp → Unknown 降级）、`detect_tech_stack`（11 条特征规则：Node/pnpm/npm/yarn/TypeScript/Vite/Next.js/Python/Rust/Java/C#）、`detect_activity`（根目录最新 mtime + 本次扫描时刻）、`list_startup_scripts`（D5 排序 start > run > 字母序，不递归）
