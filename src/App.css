@@ -338,6 +338,10 @@ button:focus-visible {
   animation: card-in 180ms ease-out;
 }
 
+.card.clickable {
+  cursor: pointer;
+}
+
 @keyframes card-in {
   from {
     opacity: 0;
@@ -744,6 +748,189 @@ button:focus-visible {
 
 .settings-name {
   font-weight: 600;
+}
+
+/* ---------- Project Detail（Phase 9） ---------- */
+
+.detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  height: 100vh;
+  padding: var(--sp-5);
+  overflow-y: auto;
+  animation: card-in 180ms ease-out;
+}
+
+.detail-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.detail-header .btn {
+  align-self: flex-start;
+}
+
+.detail-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+
+.detail-title h2 {
+  margin: 0;
+  font-size: 20px;
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}
+
+.detail-path {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: var(--sp-4);
+  align-items: start;
+}
+
+.detail-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: var(--sp-4);
+  box-shadow: var(--shadow-1);
+}
+
+.detail-section-title {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.detail-desc {
+  margin: 0;
+}
+
+.detail-kv {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  margin: 0;
+}
+
+.detail-kv-row {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: var(--sp-3);
+  align-items: baseline;
+}
+
+.detail-kv-row dt {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.detail-kv-row dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.detail-empty-inline {
+  margin: 0;
+}
+
+.detail-last-commit {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  margin: 0;
+}
+
+.detail-hash {
+  color: var(--accent);
+}
+
+.commit-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.commit-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  gap: var(--sp-3);
+  align-items: baseline;
+  font-size: 13px;
+}
+
+.commit-message {
+  overflow-wrap: anywhere;
+}
+
+.detail-activity {
+  margin: 0;
+}
+
+.detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.detail-error {
+  color: var(--danger);
+  align-items: flex-start;
+}
+
+.detail-error p {
+  margin: 0;
+}
+
+.detail-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: var(--sp-5);
+  box-shadow: var(--shadow-1);
+}
+
+/* 卡片标题链接：可键盘聚焦的项目名按钮（Phase 9 卡片选中入口） */
+
+.card-title h3 {
+  display: flex;
+}
+
+.card-title-link {
+  border: none;
+  background: none;
+  padding: 0;
+  margin: 0;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-align: left;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+.card-title-link:hover {
+  color: var(--accent);
 }
 
 /* ---------- Toast ---------- */

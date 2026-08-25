@@ -6,7 +6,7 @@
 
 ## 0. 执行进度追踪（Checkbox）
 
-> **执行进度：9 / 15 Phase 完成 · 22 / 34 子任务（最后更新：2026-08-25）**
+> **执行进度：10 / 15 Phase 完成 · 24 / 34 子任务（最后更新：2026-08-25）**
 
 ### Phase 0 环境审计
 
@@ -59,8 +59,8 @@
 
 ### Phase 9 Project Detail UI
 
-- [ ] Header / Overview / Tech / Git / Commits / Activity / Actions 全部呈现，降级文案正确
-- [ ] Actions 含“在编辑器中打开” + 手动刷新按钮（D6/D2）
+- [x] Header / Overview / Tech / Git / Commits / Activity / Actions 全部呈现，降级文案正确
+- [x] Actions 含“在编辑器中打开” + 手动刷新按钮（D6/D2）
 
 ### Phase 10 Run / Build / Open / Editor
 

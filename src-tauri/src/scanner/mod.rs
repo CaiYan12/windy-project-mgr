@@ -88,7 +88,7 @@ pub fn detect_project_type(path: &Path) -> Result<Option<String>, ScannerError> 
         return Ok(Some("Java".to_string()));
     }
     if has_file_with_ext(path, "csproj")? {
-        return Ok(Some("CSharp".to_string()));
+        return Ok(Some("C#".to_string()));
     }
     Ok(None)
 }

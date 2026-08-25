@@ -1,7 +1,7 @@
 // 卡片数据组装纯逻辑测试（原始文档第 11 节降级文案 + D8 UI 口径）。
 
 import { describe, expect, it } from "vitest";
-import { activityText, gitLine, gitSyncLine, relativeTime } from "./cards";
+import { activityText, gitLine, gitSyncLine, relativeTime, shortHash } from "./cards";
 import type { ActivityMetadata, GitMetadata } from "../types/project";
 
 function git(over: Partial<GitMetadata>): GitMetadata {
@@ -83,5 +83,21 @@ describe("relativeTime", () => {
 
   it("unparsable input degrades to the no-activity text", () => {
     expect(relativeTime("not-a-date", now)).toBe("No recent activity");
+  });
+});
+
+describe("shortHash", () => {
+  it("takes the first 7 chars of a full 40-char hash", () => {
+    expect(shortHash("a".repeat(40))).toBe("aaaaaaa");
+    expect(shortHash("0123456789abcdef0123456789abcdef01234567")).toBe("0123456");
+  });
+
+  it("returns short inputs unchanged", () => {
+    expect(shortHash("abc123")).toBe("abc123");
+    expect(shortHash("1234567")).toBe("1234567");
+  });
+
+  it("returns empty string for empty input", () => {
+    expect(shortHash("")).toBe("");
   });
 });

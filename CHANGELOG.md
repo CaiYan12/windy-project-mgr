@@ -6,6 +6,15 @@ MVP 完成前无正式版本号，变更记于 `Unreleased`。
 
 ## Unreleased
 
+### 2026-08-25 — Phase 9 Project Detail UI
+
+- **前端**：新增 `src/pages/ProjectDetail.tsx`（七分区：Header / Overview / Technology / Git / Recent Commits / Activity / Actions；只消费传入 `scan`，不发起扫描不持久化，D2）；降级态全部可见：`git = null` → `No Git repository`、空仓库 → `No commits yet`、`status = unknown` 状态点与文案、`projectType = null` → `Unknown project type`、`activity.lastModifiedAt = null` → `No recent activity`、loading 骨架、error + Retry；Actions：Open / Run / Build（未配置禁用 + D4 文案）/ Open in editor（D6，后端属 Phase 10，未注册时 Toast 报错为预期过渡态）/ Refresh（调 `scan_project` 单项目重扫，仅内存）/ Edit / Delete（复用 `EditProjectDialog` / `ConfirmDialog`）
+- **视图切换**：`App.tsx` 新增 `selectedId` 状态（无路由库）；卡片点击进入 Detail（`ProjectCard` 新增 `onSelect`，内部按钮 / 菜单 / Retry 全部 `stopPropagation`，项目名为键盘可达按钮）；删除选中项后返回 Dashboard；编辑保存后 Detail 经派生查找自动反映新记录
+- **纯逻辑（TDD）**：`lib/cards.ts` 新增 `shortHash`（取前 7 位，短输入原样返回），recentCommits 行 = hash 短码 + message + author + 相对时间；新增 vitest 3 个（红→绿）
+- **Rust**：`detect_project_type` 对 `*.csproj` 返回 `C#`（原 `CSharp`），与技术栈标签口径统一（projectType 仅运行时数据，D2 不落盘，无持久化影响）；`tests/scanner.rs` 断言同步（红→绿）
+- **样式**（ADR 0003）：`App.css` 追加 Detail 分区样式（`.detail*` / `.commit-list` / `.commit-row` / `.card-title-link` / `.card.clickable`），全走既有 CSS 变量，复用 `.status-dot` / `.tech-chip` / `.skel` / `card-in`；双轴评审修正：卡片内联 `cursor` 样式改为 `.card.clickable` 类（ADR 0003 拒内联样式）、`git = null` 时 Recent Commits 分区误显示 `No commits yet` 改为 `No Git repository`
+- **测试**：`cargo test` 75/75、`pnpm vitest run` 25/25（cards 12→15）、`pnpm build`（tsc 全量）通过；零新依赖；未提前实现 Phase 10 后端 command；UI 运行时行为属 Phase 12 人工验收清单
+
 ### 2026-08-25 — Phase 8 Dashboard UI
 
 - **Rust**：`scanner::scan_project_path` 组装 `ProjectMetadata`（字段与 §2.3 对应；单项采集失败降级为缺省值不阻断其它字段，原始第 11 节）；新增 `commands/scan.rs`：`scan_project`（D2 前端并发调用）与 `list_scripts`（Add Dialog Step 2 需在项目登记前枚举脚本，既有 command 面无法覆盖，作为 D5 所需最小增量并在代码注释/AGENTS.md 记录）；模板 `greet` command 随模板 UI 移除；新增集成测试 4 个（真实临时目录 + 真实临时 git 仓库）
@@ -24,7 +33,7 @@ MVP 完成前无正式版本号，变更记于 `Unreleased`。
 
 ### 2026-08-25 — Phase 6 Project Scanner
 
-- 新增 `scanner` 模块：`detect_project_type`（Node/Python/Rust/Java/CSharp → Unknown 降级）、`detect_tech_stack`（11 条特征规则：Node/pnpm/npm/yarn/TypeScript/Vite/Next.js/Python/Rust/Java/C#）、`detect_activity`（根目录最新 mtime + 本次扫描时刻）、`list_startup_scripts`（D5 排序 start > run > 字母序，不递归）
+- 新增 `scanner` 模块：`detect_project_type`（Node/Python/Rust/Java/CSharp → Unknown 降级；`CSharp` 于 Phase 9 统一为 `C#`）、`detect_tech_stack`（11 条特征规则：Node/pnpm/npm/yarn/TypeScript/Vite/Next.js/Python/Rust/Java/C#）、`detect_activity`（根目录最新 mtime + 本次扫描时刻）、`list_startup_scripts`（D5 排序 start > run > 字母序，不递归）
 - 可诊断错误：`ScannerError::{PathNotFound, PermissionDenied, Io}`；单项失败不影响其它扫描；无 AST、不递归深扫
 - 新增测试 17 个（scanner 15 + real_repo 2，含本仓库根目录 / src-tauri 真实目录验证）；`cargo test` 60/60 通过
 

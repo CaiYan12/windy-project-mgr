@@ -70,7 +70,7 @@ fn detects_java_and_csharp_projects() {
 
     let cs = temp_dir("csharp");
     touch(&cs, "App.csproj");
-    assert_eq!(detect_project_type(&cs).expect("scan"), Some("CSharp".to_string()));
+    assert_eq!(detect_project_type(&cs).expect("scan"), Some("C#".to_string()));
     cleanup(&cs);
 }
 

@@ -19,6 +19,7 @@ export function ProjectCardSkeleton() {
 export function ProjectCard({
   project,
   scan,
+  onSelect,
   onOpen,
   onRun,
   onBuild,
@@ -29,6 +30,7 @@ export function ProjectCard({
 }: {
   project: Project;
   scan?: ScanState;
+  onSelect: () => void;
   onOpen: () => void;
   onRun: () => void;
   onBuild: () => void;
@@ -48,10 +50,20 @@ export function ProjectCard({
   const syncLine = meta?.git ? gitSyncLine(meta.git) : null;
 
   return (
-    <article className="card">
+    <article className="card clickable" onClick={onSelect}>
       <header className="card-header">
         <div className="card-title">
-          <h3>{project.name}</h3>
+          <h3>
+            <button
+              className="card-title-link"
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelect();
+              }}
+            >
+              {project.name}
+            </button>
+          </h3>
           <span className="type-chip">{meta?.projectType ?? "Unknown project type"}</span>
         </div>
         <div className="card-menu-wrap">
@@ -59,17 +71,27 @@ export function ProjectCard({
             className="icon-btn"
             aria-label="More"
             aria-expanded={menuOpen}
-            onClick={() => setMenuOpen((v) => !v)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setMenuOpen((v) => !v);
+            }}
           >
             ⋯
           </button>
           {menuOpen && (
             <>
-              <div className="menu-overlay" onClick={() => setMenuOpen(false)} />
+              <div
+                className="menu-overlay"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setMenuOpen(false);
+                }}
+              />
               <div className="menu" role="menu">
                 <button
                   role="menuitem"
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
                     setMenuOpen(false);
                     onOpenInEditor();
                   }}
@@ -78,7 +100,8 @@ export function ProjectCard({
                 </button>
                 <button
                   role="menuitem"
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
                     setMenuOpen(false);
                     onEdit();
                   }}
@@ -88,7 +111,8 @@ export function ProjectCard({
                 <button
                   role="menuitem"
                   className="menu-danger"
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
                     setMenuOpen(false);
                     onDelete();
                   }}
@@ -117,7 +141,13 @@ export function ProjectCard({
       {scan.status === "error" ? (
         <p className="card-error">
           Scan failed: {scan.message}{" "}
-          <button className="link-btn" onClick={onRescan}>
+          <button
+            className="link-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              onRescan();
+            }}
+          >
             Retry
           </button>
         </p>
@@ -141,12 +171,21 @@ export function ProjectCard({
       )}
 
       <footer className="card-actions">
-        <button className="btn small" onClick={onOpen}>
+        <button
+          className="btn small"
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpen();
+          }}
+        >
           Open
         </button>
         <button
           className="btn small"
-          onClick={onRun}
+          onClick={(e) => {
+            e.stopPropagation();
+            onRun();
+          }}
           disabled={!project.runCommand}
           title={project.runCommand ? undefined : "Run command not configured"}
         >
@@ -154,7 +193,10 @@ export function ProjectCard({
         </button>
         <button
           className="btn small"
-          onClick={onBuild}
+          onClick={(e) => {
+            e.stopPropagation();
+            onBuild();
+          }}
           disabled={!project.buildCommand}
           title={project.buildCommand ? undefined : "Build command not configured"}
         >

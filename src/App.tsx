@@ -4,6 +4,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Sidebar, type TagCount } from "./components/Sidebar";
 import { ProjectCard } from "./components/ProjectCard";
+import { ProjectDetail } from "./pages/ProjectDetail";
 import { AddProjectDialog } from "./components/AddProjectDialog";
 import { EditProjectDialog } from "./components/EditProjectDialog";
 import { SettingsDialog } from "./components/SettingsDialog";
@@ -36,6 +37,9 @@ function App() {
   const [dialog, setDialog] = useState<Dialog>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  const selected = selectedId ? projects.find((p) => p.id === selectedId) ?? null : null;
 
   const showToast = useCallback((message: string) => {
     setToast(message);
@@ -106,6 +110,9 @@ function App() {
         delete next[project.id];
         return next;
       });
+      if (selectedId === project.id) {
+        setSelectedId(null);
+      }
       setDialog(null);
     } catch (e) {
       showToast(String(e));
@@ -127,52 +134,70 @@ function App() {
       />
 
       <main className="main">
-        <div className="toolbar">
-          <input
-            className="search"
-            type="search"
-            placeholder="Search name, description, tag or path"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            aria-label="Search projects"
+        {selected ? (
+          <ProjectDetail
+            project={selected}
+            scan={scans[selected.id]}
+            onBack={() => setSelectedId(null)}
+            onRefresh={() => scanOne(selected)}
+            onOpen={() => guarded(() => openProject(selected.path))}
+            onRun={() => guarded(() => runProject(selected.path, selected.runCommand ?? ""))}
+            onBuild={() => guarded(() => buildProject(selected.path, selected.buildCommand ?? ""))}
+            onOpenInEditor={() => guarded(() => openInEditor(selected.path))}
+            onEdit={() => setDialog({ kind: "edit", project: selected })}
+            onDelete={() => setDialog({ kind: "delete", project: selected })}
           />
-          <button className="btn btn-primary" onClick={() => setDialog({ kind: "add" })}>
-            Add project
-          </button>
-        </div>
-
-        {loadError ? (
-          <div className="empty-state">
-            <p>Could not load projects: {loadError}</p>
-          </div>
-        ) : projects.length === 0 ? (
-          <div className="empty-state">
-            <p>No projects yet.</p>
-            <button className="btn btn-primary" onClick={() => setDialog({ kind: "add" })}>
-              Add your first project
-            </button>
-          </div>
-        ) : visible.length === 0 ? (
-          <div className="empty-state">
-            <p>Nothing matches your search.</p>
-          </div>
         ) : (
-          <div className="card-grid">
-            {visible.map((p) => (
-              <ProjectCard
-                key={p.id}
-                project={p}
-                scan={scans[p.id]}
-                onOpen={() => guarded(() => openProject(p.path))}
-                onRun={() => guarded(() => runProject(p.path, p.runCommand ?? ""))}
-                onBuild={() => guarded(() => buildProject(p.path, p.buildCommand ?? ""))}
-                onOpenInEditor={() => guarded(() => openInEditor(p.path))}
-                onEdit={() => setDialog({ kind: "edit", project: p })}
-                onDelete={() => setDialog({ kind: "delete", project: p })}
-                onRescan={() => scanOne(p)}
+          <>
+            <div className="toolbar">
+              <input
+                className="search"
+                type="search"
+                placeholder="Search name, description, tag or path"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                aria-label="Search projects"
               />
-            ))}
-          </div>
+              <button className="btn btn-primary" onClick={() => setDialog({ kind: "add" })}>
+                Add project
+              </button>
+            </div>
+
+            {loadError ? (
+              <div className="empty-state">
+                <p>Could not load projects: {loadError}</p>
+              </div>
+            ) : projects.length === 0 ? (
+              <div className="empty-state">
+                <p>No projects yet.</p>
+                <button className="btn btn-primary" onClick={() => setDialog({ kind: "add" })}>
+                  Add your first project
+                </button>
+              </div>
+            ) : visible.length === 0 ? (
+              <div className="empty-state">
+                <p>Nothing matches your search.</p>
+              </div>
+            ) : (
+              <div className="card-grid">
+                {visible.map((p) => (
+                  <ProjectCard
+                    key={p.id}
+                    project={p}
+                    scan={scans[p.id]}
+                    onSelect={() => setSelectedId(p.id)}
+                    onOpen={() => guarded(() => openProject(p.path))}
+                    onRun={() => guarded(() => runProject(p.path, p.runCommand ?? ""))}
+                    onBuild={() => guarded(() => buildProject(p.path, p.buildCommand ?? ""))}
+                    onOpenInEditor={() => guarded(() => openInEditor(p.path))}
+                    onEdit={() => setDialog({ kind: "edit", project: p })}
+                    onDelete={() => setDialog({ kind: "delete", project: p })}
+                    onRescan={() => scanOne(p)}
+                  />
+                ))}
+              </div>
+            )}
+          </>
         )}
       </main>
 

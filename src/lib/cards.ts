@@ -31,6 +31,11 @@ export function activityText(activity: ActivityMetadata, now: number): string {
   return relativeTime(activity.lastModifiedAt, now);
 }
 
+/** 短 hash：取前 7 位，短于 7 位的输入原样返回。 */
+export function shortHash(hash: string): string {
+  return hash.slice(0, 7);
+}
+
 /** ISO 时刻相对化：<60s just now、<60m Nm ago、<24h Nh ago、<=30d Nd ago，否则日期。 */
 export function relativeTime(iso: string, now: number): string {
   const t = Date.parse(iso);
