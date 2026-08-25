@@ -5,7 +5,7 @@
 ## 当前状态快照
 
 - **进度**：8 / 15 Phase 完成 · 17 / 34 子任务（权威追踪：`docs/PLAN.MD` 第 0 节）
-- **仓库**：`d:\Dev\windy-project-mgr`，分支 `main`，最新提交即 Phase 7 票提交（`git log -1` 可查）
+- **仓库**：`d:\Dev\windy-project-mgr`，分支 `main`，工作区干净，最新提交 `1c1f255`
 - **代码**：Tauri 2 工程骨架 + 数据层 + CRUD commands + Scanner + Git Scanner 已实现；前端仍是模板 UI；`scan_project` command 尚未实现（Phase 8 组装时接入 `git::scan_git`）
 - **测试**：`cargo test` 71/71 通过（src-tauri）；前端 vitest 尚未引入（属后续票面）
 
@@ -20,7 +20,7 @@
 | 4 数据层 | `ded1de7` | projects.json / settings.json Store，原子写，23 测试（TDD） |
 | 5 Project CRUD | `b4eb3d4` | 5 个 Tauri command + D3 路径查重（含词法绝对化），43 测试 |
 | 6 Project Scanner | `2cb84c6` | 类型/技术栈/活动/启动脚本枚举（D5），60 测试 |
-| 7 Git Scanner | （本次会话提交，见 `git log`） | `git::scan_git` + `scan_git_with`，系统 Git CLI 离线扫描（D8），真实临时仓库测试 11 个，71 测试 |
+| 7 Git Scanner | `1c1f255` | `git::scan_git` + `scan_git_with`，系统 Git CLI 离线扫描（D8），真实临时仓库测试 11 个，71 测试 |
 
 ## 下一票：Phase 8 — Dashboard UI（PLAN.MD 第 0 节五个复选框）
 
