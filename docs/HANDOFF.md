@@ -24,7 +24,7 @@
 | 8 Dashboard UI | `468e934` | scan_project/list_scripts command + 全部 Dashboard 组件（D2/D5/D7/D9/D10），vitest 22 + cargo 75，`pnpm build` 通过 |
 | 9 Project Detail UI | `f8067a7` | `pages/ProjectDetail.tsx` 七分区 + 降级态；`selectedId` 视图切换；`shortHash`（vitest 22→25）；`CSharp`→`C#`（红→绿） |
 | 10 Run/Build/Open/Editor | `f36ef4e` | `launch` 模块（D4）+ `commands/actions.rs` 六个 command（D6）；TDD 红→绿 19 个（cargo 75→94）；运行时探针 10/10 PASS；零新依赖 |
-| 11 UI Polish + 主题系统 | （见 `git log`） | 主题系统（D1）：`data-theme` 三态（`:root[data-theme="dark"]` 强制暗 + `@media:not([data-theme="light"])` 跟随系统）；`lib/theme.ts` 纯逻辑（TDD 红→绿 4 个，vitest 25→29）；SettingsDialog 由只读占位改可编辑（主题单选组 + 编辑器 datalist 预设 code/code-insiders/cursor + 自定义）；App 启动读取并应用主题（重启保留）；运行时探针验证 D1 全链路（`data-theme=dark` 生效、`--bg=#14181a`、IPC 往返一致，探针已移除）；零新依赖 |
+| 11 UI Polish + 主题系统 | `c53e454` | 主题系统（D1）：`data-theme` 三态（`:root[data-theme="dark"]` 强制暗 + `@media:not([data-theme="light"])` 跟随系统）；`lib/theme.ts` 纯逻辑（TDD 红→绿 4 个，vitest 25→29）；SettingsDialog 由只读占位改可编辑（主题单选组 + 编辑器 datalist 预设 code/code-insiders/cursor + 自定义）；App 启动读取并应用主题（重启保留）；运行时探针验证 D1 全链路（`data-theme=dark` 生效、`--bg=#14181a`、IPC 往返一致，探针已移除）；零新依赖 |
 
 ## 下一票：Phase 12 — 全链路集成测试（PLAN.MD 第 0 节一个复选框）
 
