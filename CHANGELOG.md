@@ -6,6 +6,12 @@ MVP 完成前无正式版本号，变更记于 `Unreleased`。
 
 ## Unreleased
 
+### 2026-08-25 — Phase 6 Project Scanner
+
+- 新增 `scanner` 模块：`detect_project_type`（Node/Python/Rust/Java/CSharp → Unknown 降级）、`detect_tech_stack`（11 条特征规则：Node/pnpm/npm/yarn/TypeScript/Vite/Next.js/Python/Rust/Java/C#）、`detect_activity`（根目录最新 mtime + 本次扫描时刻）、`list_startup_scripts`（D5 排序 start > run > 字母序，不递归）
+- 可诊断错误：`ScannerError::{PathNotFound, PermissionDenied, Io}`；单项失败不影响其它扫描；无 AST、不递归深扫
+- 新增测试 17 个（scanner 15 + real_repo 2，含本仓库根目录 / src-tauri 真实目录验证）；`cargo test` 60/60 通过
+
 ### 2026-08-25 — Phase 5 Project CRUD
 
 - 新增 `project::dedup`：路径规范化（分隔符统一 / 去尾分隔符）+ 大小写不敏感比较（D3）

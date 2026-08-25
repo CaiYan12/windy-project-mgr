@@ -6,7 +6,7 @@
 
 ## 0. 执行进度追踪（Checkbox）
 
-> **执行进度：6 / 15 Phase 完成 · 13 / 34 子任务（最后更新：2026-08-25）**
+> **执行进度：7 / 15 Phase 完成 · 15 / 34 子任务（最后更新：2026-08-25）**
 
 ### Phase 0 环境审计
 
@@ -41,8 +41,8 @@
 
 ### Phase 6 Project Scanner
 
-- [ ] 项目类型 / 技术栈 / 活动检测实现，真实目录验证（Node/Python/Unknown/Git/Non-Git）
-- [ ] 根目录启动脚本枚举：全部 `*.bat` / `*.cmd` / `*.ps1`，按 start > run > 字母序排序（D5）
+- [x] 项目类型 / 技术栈 / 活动检测实现，真实目录验证（Node/Python/Unknown/Git/Non-Git）
+- [x] 根目录启动脚本枚举：全部 `*.bat` / `*.cmd` / `*.ps1`，按 start > run > 字母序排序（D5）
 
 ### Phase 7 Git Scanner
 

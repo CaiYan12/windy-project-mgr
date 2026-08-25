@@ -98,7 +98,7 @@ The self-check question: "If a fresh agent starts tomorrow and reads only AGENTS
 
 ## Repository Status
 
-This repository is **in development** (Phase 0~5 done; progress tracked in `docs/PLAN.MD` section 0). Top-level layout: documentation (`docs/`, `CONTEXT.md`, `TESTING.md`, `PROJECT_STATUS.md`, `CHANGELOG.md`) plus the app code — `src/` (React 19 + TS 5.8 + Vite 7 frontend, still template UI; `components/`, `pages/`, `lib/`, `types/` placeholders), `src-tauri/` (Tauri 2.11.5, identifier `com.windy.project-mgr`; data layer in `src/project/{types,store,settings,dedup}.rs`, CRUD commands registered in `src/commands/project.rs`, 43 passing cargo tests; `scanner/`, `git/` still empty modules), and root Vite/TS configs. Documentation inventory:
+This repository is **in development** (Phase 0~6 done; progress tracked in `docs/PLAN.MD` section 0). Top-level layout: documentation (`docs/`, `CONTEXT.md`, `TESTING.md`, `PROJECT_STATUS.md`, `CHANGELOG.md`) plus the app code — `src/` (React 19 + TS 5.8 + Vite 7 frontend, still template UI; `components/`, `pages/`, `lib/`, `types/` placeholders), `src-tauri/` (Tauri 2.11.5, identifier `com.windy.project-mgr`; data layer in `src/project/`, CRUD commands in `src/commands/project.rs`, scanner in `src/scanner/mod.rs`, 60 passing cargo tests; `git/` still an empty module), and root Vite/TS configs. Documentation inventory:
 
 - `docs/Windy Project Manager - Primary Request&Plan Document.md` — original requirements and development rules (sections 1~28 baseline; sections 29~31 decision extensions). This is the authoritative spec.
 - `docs/PLAN.MD` — self-contained executable plan: decisions D1~D13, Phase 0~14, acceptance criteria, and the checkbox progress tracker (section 0).

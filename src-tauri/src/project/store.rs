@@ -147,7 +147,7 @@ pub fn now_utc() -> String {
 }
 
 /// Unix 秒 → `YYYY-MM-DDTHH:MM:SSZ`（公历民用算法）。
-fn iso8601_utc(secs: u64) -> String {
+pub fn iso8601_utc(secs: u64) -> String {
     let days = (secs / 86_400) as i64;
     let rem = secs % 86_400;
     let (h, m, s) = (rem / 3600, (rem / 60) % 60, rem % 60);
