@@ -6,6 +6,11 @@ MVP 完成前无正式版本号，变更记于 `Unreleased`。
 
 ## Unreleased
 
+### 2026-08-25 — Phase 3 基础目录
+
+- 建立 `src/{components,pages,lib,types}`（.gitkeep 占位）与 `src-tauri/src/{commands,project,scanner,git}`（各含职责声明的 mod.rs）
+- `cargo check` 与 `pnpm build` 双侧编译验证通过
+
 ### 2026-08-25 — Phase 2 工程初始化
 
 - create-tauri-app 4.6.2 脚手架：react-ts 模板（D11：pnpm + React 19.2.8 + TypeScript 5.8.3 + Vite 7.3.6 + Tauri 2.11.5）
