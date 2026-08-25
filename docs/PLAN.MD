@@ -6,7 +6,7 @@
 
 ## 0. 执行进度追踪（Checkbox）
 
-> **执行进度：4 / 15 Phase 完成 · 9 / 34 子任务（最后更新：2026-08-25）**
+> **执行进度：5 / 15 Phase 完成 · 11 / 34 子任务（最后更新：2026-08-25）**
 
 ### Phase 0 环境审计
 
@@ -31,8 +31,8 @@
 
 ### Phase 4 数据层
 
-- [ ] `projects.json` Store（Load/Save/Create/Update/Delete/Get），先写测试再实现，全部测试通过
-- [ ] `settings.json` 读写（同机制：`version` / 临时文件替换 / 损坏可诊断，D6）
+- [x] `projects.json` Store（Load/Save/Create/Update/Delete/Get），先写测试再实现，全部测试通过
+- [x] `settings.json` 读写（同机制：`version` / 临时文件替换 / 损坏可诊断，D6）
 
 ### Phase 5 Project CRUD
 

@@ -6,6 +6,13 @@ MVP 完成前无正式版本号，变更记于 `Unreleased`。
 
 ## Unreleased
 
+### 2026-08-25 — Phase 4 数据层（TDD）
+
+- 新增 `project::types`：`Project`（8 字段，camelCase 序列化）、`StoreError`（Io / Corrupted / VersionMismatch / NotFound / DuplicateId）、版本化文件外层 `Versioned<T>`
+- 新增 `project::store`：`Store` Load/Save/Create/Update/Delete/Get；原子写（临时文件 + sync + 重命名，失败清理不损原文件）；`new_id` / `now_utc`（仅 std，无新依赖）
+- 新增 `project::settings`：`settings.json` 读写（D6，同机制，默认 `editorCommand=""` / `theme="system"`）
+- 新增集成测试 21 个（真实临时目录，无 Mock）+ 单元测试 2 个；`cargo test` 23/23 通过
+
 ### 2026-08-25 — Phase 3 基础目录
 
 - 建立 `src/{components,pages,lib,types}`（.gitkeep 占位）与 `src-tauri/src/{commands,project,scanner,git}`（各含职责声明的 mod.rs）

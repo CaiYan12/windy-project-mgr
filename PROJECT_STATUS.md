@@ -1,7 +1,7 @@
 # Windy Project Manager Development Status
 
 Current Phase:
-Phase 3 — 基础目录（已完成）
+Phase 4 — 数据层（已完成）
 
 Status:
 COMPLETE
@@ -11,6 +11,7 @@ Completed:
 - Phase 1：`CONTEXT.md` 术语表、`CHANGELOG.md`、`TESTING.md` 验收清单骨架、`docs/adr/0001~0003` 三份 ADR 落盘（均验证：存在 + 严格 UTF-8 无乱码）
 - Phase 2：create-tauri-app 4.6.2 脚手架（react-ts 模板，D11：pnpm + React 19.2.8 + TS 5.8.3 + Vite 7.3.6 + Tauri 2.11.5，identifier `com.windy.project-mgr`）；`pnpm tauri dev` 启动验证通过（Vite 287ms ready，首次 470 crates 编译 1m57s，应用进程拉起无报错）；`pnpm tauri build` 通过（release 编译 2m21s，产出 MSI + NSIS 双 bundle）
 - Phase 3：目录结构建立并可编译：`src/{components,pages,lib,types}`（.gitkeep 占位）与 `src-tauri/src/{commands,project,scanner,git}`（各含职责声明的 mod.rs，已接入 lib.rs）；`cargo check` 与 `pnpm build` 双侧验证通过
+- Phase 4：数据层 TDD 完成（四个 red→green 切片）：`project::types`（Project / StoreError / Versioned）、`project::store`（Load/Save/Create/Update/Delete/Get + write_atomic + new_id/now_utc，仅 std）、`project::settings`（D6 同机制）；集成测试用真实临时目录，覆盖文件不存在 / 空文件 / JSON 损坏 / 版本不匹配 / 保存失败不损原文件 / 重复 ID / 删除不存在项目 / 删除不删目录
 
 In Progress:
 - None
@@ -19,9 +20,9 @@ Blocked:
 - None
 
 Tests:
-- Passed: 0
+- Passed: 23（cargo test 全量：lib 2 + tests/project_store 15 + tests/settings 6，2026-08-25）
 - Failed: 0
-- Not Run: N/A（Phase 0 无测试项）
+- Not Run: 0（前端 vitest 尚未引入，属后续票面）
 
 Build:
 - Development: PASS（`pnpm tauri dev` 启动验证，2026-08-25）
@@ -32,7 +33,7 @@ Known Issues:
 - `%USERPROFILE%\.cargo\bin` 已加入用户 PATH，但当前会话已打开的 shell 不会自动刷新；验证时使用全路径，新开终端可直接使用 `rustc` / `cargo`
 
 Next Step:
-- Phase 4 — 数据层（TDD：先写失败测试再实现）：`projects.json` Store（Load/Save/Create/Update/Delete/Get）与 `settings.json` 读写（version / 临时文件替换 / 损坏可诊断，D6）
+- Phase 5 — Project CRUD：Tauri command 层（create_project / get_project(s) / update_project / delete_project）+ 单元 / 集成测试；路径查重测试用例（重复路径 / 大小写变体 / 末尾分隔符变体，D3）；删除确认交互留待 Phase 8
 
 ---
 

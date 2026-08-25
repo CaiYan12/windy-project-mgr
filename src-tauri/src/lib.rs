@@ -1,6 +1,6 @@
 mod commands;
 mod git;
-mod project;
+pub mod project;
 mod scanner;
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
