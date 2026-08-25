@@ -98,7 +98,7 @@ The self-check question: "If a fresh agent starts tomorrow and reads only AGENTS
 
 ## Repository Status
 
-This repository is **in development** (Phase 0~7 done; progress tracked in `docs/PLAN.MD` section 0). Top-level layout: documentation (`docs/`, `CONTEXT.md`, `TESTING.md`, `PROJECT_STATUS.md`, `CHANGELOG.md`) plus the app code — `src/` (React 19 + TS 5.8 + Vite 7 frontend, still template UI; `components/`, `pages/`, `lib/`, `types/` placeholders), `src-tauri/` (Tauri 2.11.5, identifier `com.windy.project-mgr`; data layer in `src/project/`, CRUD commands in `src/commands/project.rs`, scanner in `src/scanner/mod.rs`, git scanner in `src/git/mod.rs` (system Git CLI, offline per D8), 71 passing cargo tests), and root Vite/TS configs. Documentation inventory:
+This repository is **in development** (Phase 0~8 done; progress tracked in `docs/PLAN.MD` section 0). Top-level layout: documentation (`docs/`, `CONTEXT.md`, `TESTING.md`, `PROJECT_STATUS.md`, `CHANGELOG.md`) plus the app code — `src/` (React 19 + TS 5.8 + Vite 7 frontend: Dashboard implemented — `components/` Sidebar/Card/Dialogs, `lib/` api+search+cards+paths with 22 vitest pure-logic tests, `types/`; Detail page still pending), `src-tauri/` (Tauri 2.11.5, identifier `com.windy.project-mgr`; data layer in `src/project/`, CRUD commands in `src/commands/project.rs`, scan commands in `src/commands/scan.rs`, scanner in `src/scanner/mod.rs`, git scanner in `src/git/mod.rs` (system Git CLI, offline per D8), 75 passing cargo tests), and root Vite/TS configs. Documentation inventory:
 
 - `docs/Windy Project Manager - Primary Request&Plan Document.md` — original requirements and development rules (sections 1~28 baseline; sections 29~31 decision extensions). This is the authoritative spec.
 - `docs/PLAN.MD` — self-contained executable plan: decisions D1~D13, Phase 0~14, acceptance criteria, and the checkbox progress tracker (section 0).
@@ -124,9 +124,10 @@ cargo test                   # Rust unit + integration tests (src-tauri)
 cargo test <test_name>       # run a single Rust test
 pnpm vitest run              # frontend pure-logic tests only (search filter, path dedup normalization, card data assembly)
 pnpm vitest run <file>       # run a single frontend test file
+pnpm test                    # alias of `pnpm vitest run`
 ```
 
-The first three rows are runnable now; `cargo test` has no tests yet until the Phase 4 data layer; the `vitest` rows become runnable once vitest is added as a dev dependency (planned with the frontend pure-logic tests, not yet installed — do not run them until then).
+All rows are runnable now; the `vitest` rows became runnable in Phase 8 (vitest 4 is a devDependency; 22 pure-logic tests, no component render tests per D12).
 
 Rust is installed on the reference machine: rustup 1.29.0 with `stable-x86_64-pc-windows-msvc` (rustc / cargo 1.98.0, verified 2026-08-25 in Phase 0). Node v24.18.0, pnpm 10.26.2, Git 2.48.1, and VS2022 with VC x86/x64 are present; full audit table in `PROJECT_STATUS.md`. Note: shells opened before the install may need `%USERPROFILE%\.cargo\bin` on PATH or a restart.
 
@@ -142,7 +143,7 @@ Cross-cutting decisions that shape implementation (full text in `docs/PLAN.MD` s
 - **Run/Build/Open-in-editor are detached launches**: prefer `wt.exe`, fall back to `powershell -NoExit`, cwd = project path. The app reports only launch success/failure — it never captures exit codes or output, so "Build failed" in acceptance tests means the launch action failed, not the command.
 - **Path dedup on add**: normalize to absolute path, compare case-insensitively (Windows semantics); duplicates are rejected with a message, never merged.
 - **Theming**: single global stylesheet, all colors/spacing via CSS variables, light/dark sets switched by root `data-theme`; default follows system, manual choice persists to `settings.json` (`theme` field). Future theme presets = new variable sets, no mechanism change.
-- **Tauri command surface is intentionally minimal**: CRUD (5) + `scan_project` + `open_project`/`run_project`/`build_project` + `get_settings`/`update_settings`/`open_in_editor`. Do not add Service/Controller/Repository layers unless code size proves the need. Current wiring: the 5 CRUD commands are registered (Phase 5); command handlers keep testable `*_in(data_dir)` cores so tests run against temp dirs instead of `%APPDATA%`.
+- **Tauri command surface is intentionally minimal**: CRUD (5) + `scan_project` + `list_scripts` (added Phase 8: Add Dialog Step 2 needs script enumeration for unregistered paths, D5; justified in `src/commands/scan.rs`) + `open_project`/`run_project`/`build_project` + `get_settings`/`update_settings`/`open_in_editor` (last six pending Phase 10). Do not add Service/Controller/Repository layers unless code size proves the need. Current wiring: CRUD + scan commands are registered (Phase 5/8); the template `greet` command was removed with the template UI; command handlers keep testable `*_in(data_dir)` cores so tests run against temp dirs instead of `%APPDATA%`. Frontend uses only React built-in hooks + a single CSS-variable stylesheet (ADR 0003); light/dark variable sets follow the system via `prefers-color-scheme` until Phase 11 adds manual `data-theme` switching + persistence.
 
 ## Execution Protocol (Mandatory)
 

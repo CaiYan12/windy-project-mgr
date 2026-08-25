@@ -41,6 +41,29 @@ pub struct ActivityMetadata {
     pub last_scanned_at: String,
 }
 
+/// 运行时扫描结果（D2：仅存前端内存，不落盘；字段与 PLAN §2.3 对应）。
+#[derive(Debug, Clone, PartialEq, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProjectMetadata {
+    pub project_type: Option<String>,
+    pub tech_stack: Vec<String>,
+    pub git: Option<crate::git::GitMetadata>,
+    pub activity: ActivityMetadata,
+}
+
+/// 完整扫描管线：类型 → 技术栈 → Git → 活动。
+/// 单项失败降级为缺省值，不影响其它字段（原始文档第 11 节：
+/// 不得因某一项信息采集失败导致整个项目卡片无法显示）。
+pub fn scan_project_path(path: &Path) -> Result<ProjectMetadata, ScannerError> {
+    require_dir(path)?;
+    Ok(ProjectMetadata {
+        project_type: detect_project_type(path).ok().flatten(),
+        tech_stack: detect_tech_stack(path).unwrap_or_default(),
+        git: crate::git::scan_git(path).ok().flatten(),
+        activity: detect_activity(path)?,
+    })
+}
+
 /// 根目录启动脚本候选（D5）。
 #[derive(Debug, Clone, PartialEq, serde::Serialize)]
 #[serde(rename_all = "camelCase")]

@@ -1,50 +1,216 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import { invoke } from "@tauri-apps/api/core";
+// Dashboard（原始文档第 10 节：Sidebar + Toolbar + Card Grid）。
+// D2：启动即渲染卡片骨架，并发扫描逐卡填充；结果仅存内存。
+
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Sidebar, type TagCount } from "./components/Sidebar";
+import { ProjectCard } from "./components/ProjectCard";
+import { AddProjectDialog } from "./components/AddProjectDialog";
+import { EditProjectDialog } from "./components/EditProjectDialog";
+import { SettingsDialog } from "./components/SettingsDialog";
+import { ConfirmDialog } from "./components/Modal";
+import { filterProjects } from "./lib/search";
+import {
+  buildProject,
+  deleteProject,
+  getProjects,
+  openInEditor,
+  openProject,
+  runProject,
+  scanProject,
+} from "./lib/api";
+import type { Project, ScanState } from "./types/project";
 import "./App.css";
 
-function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
+type Dialog =
+  | { kind: "add" }
+  | { kind: "edit"; project: Project }
+  | { kind: "delete"; project: Project }
+  | { kind: "settings" }
+  | null;
 
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    setGreetMsg(await invoke("greet", { name }));
+function App() {
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [scans, setScans] = useState<Record<string, ScanState>>({});
+  const [query, setQuery] = useState("");
+  const [activeTag, setActiveTag] = useState<string | null>(null);
+  const [dialog, setDialog] = useState<Dialog>(null);
+  const [toast, setToast] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  const showToast = useCallback((message: string) => {
+    setToast(message);
+  }, []);
+
+  useEffect(() => {
+    if (!toast) {
+      return;
+    }
+    const t = setTimeout(() => setToast(null), 6000);
+    return () => clearTimeout(t);
+  }, [toast]);
+
+  const scanOne = useCallback(async (project: Project) => {
+    setScans((s) => ({ ...s, [project.id]: { status: "loading" } }));
+    try {
+      const data = await scanProject(project.path);
+      setScans((s) => ({ ...s, [project.id]: { status: "ok", data } }));
+    } catch (e) {
+      setScans((s) => ({ ...s, [project.id]: { status: "error", message: String(e) } }));
+    }
+  }, []);
+
+  useEffect(() => {
+    getProjects()
+      .then((list) => {
+        setProjects(list);
+        list.forEach((p) => scanOne(p));
+      })
+      .catch((e) => setLoadError(String(e)));
+  }, [scanOne]);
+
+  const tags = useMemo<TagCount[]>(() => {
+    const counts = new Map<string, number>();
+    for (const p of projects) {
+      for (const t of p.tags) {
+        counts.set(t, (counts.get(t) ?? 0) + 1);
+      }
+    }
+    return [...counts.entries()]
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([name, count]) => ({ name, count }));
+  }, [projects]);
+
+  const visible = useMemo(() => {
+    const byTag = activeTag ? projects.filter((p) => p.tags.includes(activeTag)) : projects;
+    return filterProjects(byTag, query);
+  }, [projects, activeTag, query]);
+
+  function handleCreated(project: Project) {
+    setProjects((list) => [...list, project]);
+    setDialog(null);
+    scanOne(project);
+  }
+
+  function handleSaved(updated: Project) {
+    setProjects((list) => list.map((p) => (p.id === updated.id ? updated : p)));
+    setDialog(null);
+    scanOne(updated);
+  }
+
+  async function handleDelete(project: Project) {
+    try {
+      await deleteProject(project.id);
+      setProjects((list) => list.filter((p) => p.id !== project.id));
+      setScans((s) => {
+        const next = { ...s };
+        delete next[project.id];
+        return next;
+      });
+      setDialog(null);
+    } catch (e) {
+      showToast(String(e));
+    }
+  }
+
+  function guarded(action: () => Promise<void>) {
+    action().catch((e) => showToast(String(e)));
   }
 
   return (
-    <main className="container">
-      <h1>Welcome to Tauri + React</h1>
+    <div className="app">
+      <Sidebar
+        total={projects.length}
+        tags={tags}
+        activeTag={activeTag}
+        onSelectTag={setActiveTag}
+        onOpenSettings={() => setDialog({ kind: "settings" })}
+      />
 
-      <div className="row">
-        <a href="https://vite.dev" target="_blank">
-          <img src="/vite.svg" className="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" className="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <p>Click on the Tauri, Vite, and React logos to learn more.</p>
+      <main className="main">
+        <div className="toolbar">
+          <input
+            className="search"
+            type="search"
+            placeholder="Search name, description, tag or path"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            aria-label="Search projects"
+          />
+          <button className="btn btn-primary" onClick={() => setDialog({ kind: "add" })}>
+            Add project
+          </button>
+        </div>
 
-      <form
-        className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          greet();
-        }}
-      >
-        <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
+        {loadError ? (
+          <div className="empty-state">
+            <p>Could not load projects: {loadError}</p>
+          </div>
+        ) : projects.length === 0 ? (
+          <div className="empty-state">
+            <p>No projects yet.</p>
+            <button className="btn btn-primary" onClick={() => setDialog({ kind: "add" })}>
+              Add your first project
+            </button>
+          </div>
+        ) : visible.length === 0 ? (
+          <div className="empty-state">
+            <p>Nothing matches your search.</p>
+          </div>
+        ) : (
+          <div className="card-grid">
+            {visible.map((p) => (
+              <ProjectCard
+                key={p.id}
+                project={p}
+                scan={scans[p.id]}
+                onOpen={() => guarded(() => openProject(p.path))}
+                onRun={() => guarded(() => runProject(p.path, p.runCommand ?? ""))}
+                onBuild={() => guarded(() => buildProject(p.path, p.buildCommand ?? ""))}
+                onOpenInEditor={() => guarded(() => openInEditor(p.path))}
+                onEdit={() => setDialog({ kind: "edit", project: p })}
+                onDelete={() => setDialog({ kind: "delete", project: p })}
+                onRescan={() => scanOne(p)}
+              />
+            ))}
+          </div>
+        )}
+      </main>
+
+      {dialog?.kind === "add" && (
+        <AddProjectDialog onClose={() => setDialog(null)} onCreated={handleCreated} />
+      )}
+      {dialog?.kind === "edit" && (
+        <EditProjectDialog
+          project={dialog.project}
+          onClose={() => setDialog(null)}
+          onSaved={handleSaved}
         />
-        <button type="submit">Greet</button>
-      </form>
-      <p>{greetMsg}</p>
-    </main>
+      )}
+      {dialog?.kind === "delete" && (
+        <ConfirmDialog
+          title="Delete project"
+          confirmLabel="Delete"
+          message={
+            <>
+              Remove <strong>{dialog.project.name}</strong> from the list? The project
+              directory on disk is never deleted.
+            </>
+          }
+          onCancel={() => setDialog(null)}
+          onConfirm={() => handleDelete(dialog.project)}
+        />
+      )}
+      {dialog?.kind === "settings" && <SettingsDialog onClose={() => setDialog(null)} />}
+
+      {toast && (
+        <div className="toast" role="alert">
+          {toast}
+          <button className="icon-btn" aria-label="Dismiss" onClick={() => setToast(null)}>
+            ✕
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
 

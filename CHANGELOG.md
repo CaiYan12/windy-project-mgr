@@ -6,6 +6,14 @@ MVP 完成前无正式版本号，变更记于 `Unreleased`。
 
 ## Unreleased
 
+### 2026-08-25 — Phase 8 Dashboard UI
+
+- **Rust**：`scanner::scan_project_path` 组装 `ProjectMetadata`（字段与 §2.3 对应；单项采集失败降级为缺省值不阻断其它字段，原始第 11 节）；新增 `commands/scan.rs`：`scan_project`（D2 前端并发调用）与 `list_scripts`（Add Dialog Step 2 需在项目登记前枚举脚本，既有 command 面无法覆盖，作为 D5 所需最小增量并在代码注释/AGENTS.md 记录）；模板 `greet` command 随模板 UI 移除；新增集成测试 4 个（真实临时目录 + 真实临时 git 仓库）
+- **前端**（模板 UI 全部替换）：`types/project.ts`（与 §2.2/§2.3 对应，含 `ScanState`）、`lib/api.ts`（IPC 封装，Phase 10 命令先行封装并注明）、`lib/search.ts`（D7）、`lib/cards.ts`（降级文案 + D8 ahead/behind 为 0 不显示 + 相对时间）、`lib/paths.ts`（name 自动取末段）；组件：`Modal`+`ConfirmDialog` / `Sidebar`（D9 标签自动提取 + 设置入口）/ `ProjectCard`（骨架屏 + 降级 + More 菜单含编辑器入口）/ `AddProjectDialog`（两步，D10 name 自动填充与查重承接、D5 脚本预选 + 文件选择器自选）/ `EditProjectDialog`（单步）/ `SettingsDialog`（只读状态，手动主题与持久化属 Phase 11）；App.tsx：启动骨架 + 并发扫描逐卡填充（D2）、标签过滤、四字段 Search、删除确认（仅删记录）、Run/Build 未配置禁用（D4 文案）、错误 Toast；`index.html` 标题改为产品名；移除已替代的 `.gitkeep` 占位
+- **样式**（ADR 0003）：单一全局样式表 `App.css`，颜色/间距/圆角/状态色全 CSS 变量（评审修正：硬编码 `#ffffff`/`rgba`/微小间距全部改为变量）；亮/暗两套变量集，本阶段经 `prefers-color-scheme` 跟随系统；骨架 shimmer + 卡片入场动效遵循 `prefers-reduced-motion`；签名元素：Sidebar 三道错落“风痕” wordmark
+- **依赖**（均说明价值）：vitest 4.1.11（devDep，D12 前端纯逻辑测试，`pnpm test` 脚本）；@tauri-apps/plugin-dialog 2.7.2 + tauri-plugin-dialog 2（D5 自选脚本文件选择器，`dialog:default` 能力已声明）
+- **测试**：新增前端纯逻辑测试 22 个（search 6 + cards 12 + paths 4，不写组件渲染测试，D12）+ Rust 集成测试 4 个；`cargo test` 75/75、`pnpm vitest run` 22/22、`pnpm build`（tsc 全量）通过；双轴评审修正：CSS 硬编码、D5 文件选择器缺失、`gitSyncLine` 双调用、TS 文件内 `//!` 注释；UI 运行时行为属 Phase 12 人工验收清单
+
 ### 2026-08-25 — Phase 7 Git Scanner（TDD）
 
 - 新增 `git` 模块：`scan_git(path) -> Result<Option<GitMetadata>, GitError>`（非仓库返回 `Ok(None)`）+ `scan_git_with(path, git_bin)` 可测核心（沿用 `*_in` 可测模式）；`lib.rs` 中 `git` 模块改为 `pub`
