@@ -5,7 +5,7 @@
 ## 当前状态快照
 
 - **进度**：9 / 15 Phase 完成 · 22 / 34 子任务（权威追踪：`docs/PLAN.MD` 第 0 节）
-- **仓库**：`d:\Dev\windy-project-mgr`，分支 `main`，最新提交即 Phase 8 票提交（`git log -1` 可查）
+- **仓库**：`d:\Dev\windy-project-mgr`，分支 `main`，工作区干净，最新提交 `468e934`
 - **代码**：Tauri 2 后端（数据层 + CRUD + scan_project/list_scripts + Git Scanner）+ Dashboard UI（卡片骨架/并发扫描填充、Sidebar 标签过滤、Search、Add/Edit/删除 Dialog、More 菜单）；Detail 页未做；Run/Build/Open/Editor/Settings 后端属 Phase 10（前端入口已就位，未注册前点击以 Toast 报错）
 - **测试**：`cargo test` 75/75；`pnpm vitest run` 22/22（纯逻辑，无组件渲染测试）；`pnpm build` 通过
 
@@ -21,7 +21,7 @@
 | 5 Project CRUD | `b4eb3d4` | 5 个 Tauri command + D3 路径查重（含词法绝对化），43 测试 |
 | 6 Project Scanner | `2cb84c6` | 类型/技术栈/活动/启动脚本枚举（D5），60 测试 |
 | 7 Git Scanner | `1c1f255` | `git::scan_git` + `scan_git_with`，系统 Git CLI 离线扫描（D8），真实临时仓库测试 11 个，71 测试 |
-| 8 Dashboard UI | （本次会话提交，见 `git log`） | scan_project/list_scripts command + 全部 Dashboard 组件（D2/D5/D7/D9/D10），vitest 22 + cargo 75 测试，`pnpm build` 通过 |
+| 8 Dashboard UI | `468e934` | scan_project/list_scripts command + 全部 Dashboard 组件（D2/D5/D7/D9/D10），vitest 22 + cargo 75 测试，`pnpm build` 通过 |
 
 ## 下一票：Phase 9 — Project Detail UI（PLAN.MD 第 0 节两个复选框）
 
