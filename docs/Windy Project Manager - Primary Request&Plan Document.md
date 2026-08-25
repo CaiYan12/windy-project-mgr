@@ -82,6 +82,8 @@ windy-project-mgr
 
 > 一个基于用户提供项目路径的 Windows 本地项目索引与信息聚合器，以卡片式界面统一展示项目、技术栈、Git 信息和开发历史，并提供项目级 Open / Run / Build / CRUD 操作。
 
+> 本文档已于 2026-08-25 经 Grilling Session 扩展：第 29~31 节为已确认决策、Phase 增量调整与验收标准增量；原第 1~28 节内容保持不变，冲突处以第 29~31 节为准。
+
 ---
 
 # 2. 明确产品边界
@@ -1563,3 +1565,155 @@ What remains
 本项目最终目标不是“大而全”，而是：
 
 > **小巧、快速、清晰、可靠，并真正适合长期管理本地开发项目。**
+
+---
+
+# 29. 已确认决策清单（Grilling Session 结论）
+
+本节为 2026-08-25 Grilling Session 逐项确认的收紧决策，覆盖第 1~28 节中原本未定义或含糊的部分。与前文冲突时以本节为准。
+
+## D1 主题系统（新增）
+
+- 全局单样式表 + CSS 变量：颜色、间距、圆角、状态色全部走变量，零样式依赖。
+- 亮 / 暗两套完整变量集，通过根节点 `data-theme` 属性切换；提供 亮 / 暗 / 跟随系统 三个选项。
+- 默认跟随系统；用户手动选择持久化到 `settings.json`（见 D6）。
+- 扩展点：未来“主题预设”= 追加变量集 + 预设元数据，不改切换机制。MVP 不实现预设与主题编辑。
+- 此项决策需落盘为 ADR（见 D13）。
+
+## D2 扫描策略（收紧第 6 节）
+
+- 启动即加载 `projects.json` 渲染卡片骨架，同时并发异步调用 `scan_project` 扫描全部项目，逐卡填充（先完成先显示）。
+- 扫描结果仅存前端内存，不落盘；`lastScannedAt` 语义降级为“本次运行内的扫描时刻”。
+- Detail 页复用内存缓存；提供手动刷新触发单项目重扫。
+- 不做 TTL，不做持久化缓存。
+- 此项决策需落盘为 ADR（见 D13）。
+
+## D3 项目查重（新增）
+
+- 添加项目时路径先规范化（取绝对路径），再做**大小写不敏感**比较（Windows 路径大小写不敏感）。
+- 命中重复：拒绝创建并提示，引导用户编辑已有记录；不做合并、不做自动跳转。
+- 测试必须覆盖：重复路径、大小写变体、末尾分隔符变体。
+
+## D4 Run / Build 执行语义（收紧第 14 节）
+
+- detached 启动：优先 `wt.exe`（Windows Terminal），探测失败回退 `powershell -NoExit` 方式。
+- `cwd = project.path`；Windy 只报告**启动成功 / 失败**，不采集命令退出码与输出。
+- “Run / Build 失败”的验收范围 = 启动动作失败（无效路径 / 终端拉起失败），不是命令本身执行失败。
+- 命令为空：按钮禁用并显示 `Run command not configured` / `Build command not configured`（与第 11 节文案对齐）。
+- 此项决策需落盘为 ADR（见 D13）。
+
+## D5 启动脚本识别引导（新增）
+
+- Add Dialog Step 2 扫描项目根目录**全部** `*.bat` / `*.cmd` / `*.ps1`（不递归），列表供用户选择。
+- 排序与预选：文件名含 `start` 优先，其次含 `run`，其余按字母序；默认预选第一项；可改选 / 清空 / 跳过。
+- “自选脚本”= 文件选择器选择一个脚本文件，其路径写入 `runCommand`；不复制文件、不解析内容。
+- 引导只作用于 `runCommand`；`buildCommand` 保持手动输入。
+- 脚本类命令与手填命令走同一套 detached 终端机制（D4）。
+
+## D6 在编辑器中打开（新增，扩展第 9 节 Command 基线）
+
+- 新增持久化文件 `%APPDATA%\windy-project-mgr\settings.json`（含 `version` 字段，与 `projects.json` 同机制：写临时文件再替换、损坏可诊断）；MVP 字段两项：`editorCommand`（本决策）与 `theme`（D1 主题选择）。
+- 编辑器用命令名识别，不做安装探测；设置 Dialog 提供预设下拉（`code` / `code-insiders` / `cursor`）+ 自定义输入。
+- 入口：项目卡片 More 菜单 + Project Detail Actions；未配置时显示 `Editor not configured` 并引导去设置。
+- 新增 Tauri Command：`get_settings` / `update_settings` / `open_in_editor`。
+
+## D7 Search（收紧）
+
+- 搜索字段：`name` / `description` / `tags` / `path`，大小写不敏感子串匹配。
+- 纯前端即时过滤，无防抖、无索引。
+- 无匹配结果显示 Empty State。
+
+## D8 Git Scanner 边界（收紧第 13 节）
+
+- 绝不执行 `git fetch`；`ahead` / `behind` 基于本地 `@{u}` 上游引用计算。
+- 无上游分支（新分支未 push）：`ahead` / `behind` 均为 `0`，UI 不显示 ahead/behind 信息。
+- `recentCommits` 取最近 10 条。
+- 空仓库（无 commit）：`branch` 正常返回，`lastCommit = null`，`recentCommits = []`。
+- detached HEAD：`branch` 返回 `detached@<短hash>`。
+- `status` 保持三态：`clean` / `modified` / `unknown`（读取失败时）。
+- 未来扩展点（MVP 不实现）：VSCode 式 git-history 图形化视图。
+
+## D9 Sidebar（收紧第 10 节）
+
+- 结构：所有项目 + 按标签过滤（标签从现有项目数据自动提取，不单独维护）+ 底部设置入口。
+- 标签过滤作用于卡片列表，不新增任何持久化数据。
+
+## D10 Add / Edit Dialog 与删除（收紧第 10 节）
+
+- Add Dialog 分两步：
+  - Step 1 基础信息：路径选择后 `name` 自动取路径末段填充（可编辑）；描述、标签；路径校验 + 查重（D3），重复即报错。
+  - Step 2 启动配置引导（D5）：可跳过，`runCommand` 留空，之后可在 Edit 中补。
+- 删除项目必须弹出确认 Dialog；仅删除记录，不删除项目目录（第 7 节约束不变）。
+- Edit Dialog 保持单步，可编辑全部字段（含 `runCommand` / `buildCommand`）。
+
+## D11 包管理与工程链（新增）
+
+- 包管理器：pnpm；锁文件 `pnpm-lock.yaml`。
+- 工程模板：create-tauri-app（React + TypeScript + Vite + Tauri 2）。
+- 状态管理仅用 React 内置 hooks，不引入状态管理库。
+- 样式按 D1：全局 CSS + CSS 变量，不引入任何样式框架。
+
+## D12 测试边界（收紧第 16 节）
+
+- Rust 侧：`cargo test` 全量覆盖（Store / CRUD / Scanner / Git Scanner），使用临时目录与真实临时 git 仓库，不只依赖 Mock。
+- 前端：仅对纯逻辑使用 `vitest`（搜索过滤、路径查重规范化、卡片数据组装）；不写组件渲染测试。
+- UI 全链路（Phase 12 / 14）：人工验收清单（`TESTING.md`，逐项勾选），不搭 WebDriver。
+
+## D13 Phase 1 文档交付物（grill-with-docs 产物）
+
+- `CONTEXT.md`：术语表（Project / ProjectMetadata / Scanner / Run Command / Editor Command / Theme 等），只含领域术语，不含实现细节。
+- `docs/adr/0001-scan-data-memory-only.md`：扫描数据不持久化、启动全量重扫的权衡。
+- `docs/adr/0002-detached-run-build.md`：Run / Build 分离式启动、不采集退出码的权衡。
+- `docs/adr/0003-css-variable-theming.md`：`data-theme` + CSS 变量、默认跟随系统的权衡。
+- `TESTING.md`：人工验收清单骨架。
+
+---
+
+# 30. Phase 增量调整表
+
+原第 15 节 Phase 0~14 主线不变，以下为各阶段增量要求。与第 15 节冲突时以本节为准。
+
+| Phase | 增量调整 |
+|---|---|
+| 0 | 增加 rustup 安装与验证（本机实测未安装；`winget install Rustlang.Rustup` 或 rustup-init.exe，默认 stable + `x86_64-pc-windows-msvc`），结果记入环境审计表 |
+| 1 | 增加 `CONTEXT.md`、3 份 ADR、`TESTING.md` 验收清单骨架（D13） |
+| 2 | 使用 pnpm 初始化（D11）；确认 `pnpm tauri dev` 与 production build 可用 |
+| 4 | 数据层增加 `settings.json` 读写，与 `projects.json` 同机制：`version` 字段、写临时文件再替换、损坏可诊断（D6） |
+| 5 | CRUD 增加查重测试用例：重复路径、大小写变体、末尾分隔符变体（D3）；删除确认交互在 Phase 8 UI 层实现 |
+| 6 | Scanner 增加根目录启动脚本枚举：全部 `*.bat` / `*.cmd` / `*.ps1`，按 D5 排序（D5） |
+| 7 | Git Scanner 按 D8 边界实现；测试必须含：无上游分支、空仓库、detached HEAD |
+| 8 | Dashboard：卡片骨架先行 + 并发扫描逐卡填充（D2）；Sidebar 标签过滤 + 设置入口（D9）；Search（D7）；卡片 More 菜单含“在编辑器中打开”（D6）；两步 Add Dialog（D10）；删除确认 Dialog |
+| 9 | Detail Actions 增加“在编辑器中打开”（D6）；手动刷新按钮（D2） |
+| 10 | Run / Build 按 D4 语义；新增 `get_settings` / `update_settings` / `open_in_editor`（D6） |
+| 11 | 主题系统（D1）：亮 / 暗两套变量集、`data-theme` 切换、跟随系统默认、选择持久化；设置 Dialog（主题 + 编辑器配置） |
+| 12 | 人工验收清单覆盖新增功能：脚本识别引导、编辑器打开、主题切换与持久化、查重拒绝 |
+| 13 / 14 | 不变；体积实测要求不变 |
+
+Tauri Command 全集（第 9 节基线 + D6 增量）：
+
+```text
+get_projects
+get_project
+create_project
+update_project
+delete_project
+scan_project
+open_project
+run_project
+build_project
+get_settings
+update_settings
+open_in_editor
+```
+
+---
+
+# 31. 验收标准增量（叠加第 25 节）
+
+以下 5 条与第 25 节全部条款共同构成 MVP 验收标准，全部满足才可宣布完成：
+
+1. **主题**：亮 / 暗 / 跟随系统三种行为正确；用户手动选择重启后保留。
+2. **查重**：重复添加同一路径（含大小写变体、末尾分隔符变体）被拒绝并有明确提示。
+3. **脚本引导**：含启动脚本的目录，Add Dialog Step 2 正确列出候选并按 `start` > `run` > 字母序规则预选。
+4. **编辑器入口**：`editorCommand` 已配置时，卡片 More 菜单与 Detail 均可拉起编辑器；未配置时显示 `Editor not configured` 并引导配置。
+5. **离线可用**：无网络环境下所有功能可用（无任何 `git fetch` / 网络依赖）。
