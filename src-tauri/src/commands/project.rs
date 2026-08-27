@@ -25,15 +25,24 @@ pub struct CreateProjectInput {
     pub build_command: Option<String>,
 }
 
-/// 应用数据目录：`%APPDATA%\windy-project-mgr`。
+/// 便携数据目录：当前可执行文件同目录下的 `data`。
+pub fn portable_data_dir(executable_path: &Path) -> Result<PathBuf, StoreError> {
+    let executable_dir = executable_path
+        .parent()
+        .filter(|path| !path.as_os_str().is_empty())
+        .ok_or_else(|| {
+            StoreError::Io(std::io::Error::new(
+                std::io::ErrorKind::NotFound,
+                "executable directory is unavailable",
+            ))
+        })?;
+    Ok(executable_dir.join("data"))
+}
+
+/// 当前运行实例的数据目录；所有运行形态统一使用 EXE 相邻的 `data`。
 pub fn app_data_dir() -> Result<PathBuf, StoreError> {
-    let appdata = std::env::var("APPDATA").map_err(|_| {
-        StoreError::Io(std::io::Error::new(
-            std::io::ErrorKind::NotFound,
-            "APPDATA environment variable is not set",
-        ))
-    })?;
-    Ok(PathBuf::from(appdata).join("windy-project-mgr"))
+    let executable_path = std::env::current_exe().map_err(StoreError::Io)?;
+    portable_data_dir(&executable_path)
 }
 
 pub fn projects_file(data_dir: &Path) -> PathBuf {
@@ -124,7 +133,8 @@ pub fn create_project(input: CreateProjectInput) -> Result<Project, String> {
 
 #[tauri::command]
 pub fn update_project(project: Project) -> Result<Project, String> {
-    update_project_in(&app_data_dir().map_err(|e| e.to_string())?, project).map_err(|e| e.to_string())
+    update_project_in(&app_data_dir().map_err(|e| e.to_string())?, project)
+        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]

@@ -1,7 +1,14 @@
 // 卡片数据组装纯逻辑测试（原始文档第 11 节降级文案 + D8 UI 口径）。
 
 import { describe, expect, it } from "vitest";
-import { activityText, gitLine, gitSyncLine, relativeTime, shortHash } from "./cards";
+import {
+  activityText,
+  formatDateTime,
+  gitLine,
+  gitSyncLine,
+  relativeTime,
+  shortHash,
+} from "./cards";
 import type { ActivityMetadata, GitMetadata } from "../types/project";
 
 function git(over: Partial<GitMetadata>): GitMetadata {
@@ -99,5 +106,22 @@ describe("shortHash", () => {
 
   it("returns empty string for empty input", () => {
     expect(shortHash("")).toBe("");
+  });
+});
+
+describe("formatDateTime", () => {
+  it("formats a UTC ISO instant as local YYYY-MM-DD HH:mm", () => {
+    const out = formatDateTime("2026-08-26T06:16:30Z");
+    // 当地时区下字段与 Date 重建一致（避免硬编码受机器时区/夏令时影响）
+    const d = new Date("2026-08-26T06:16:30Z");
+    const pad = (n: number) => String(n).padStart(2, "0");
+    expect(out).toBe(
+      `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`,
+    );
+    expect(out).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/);
+  });
+
+  it("returns the input unchanged when unparsable", () => {
+    expect(formatDateTime("not-a-date")).toBe("not-a-date");
   });
 });

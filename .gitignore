@@ -10,7 +10,17 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+/build/
+/release/
+.learnings/
 *.local
+
+# Local agent planning and acceptance artifacts
+/.superpowers/
+/docs/superpowers/
+/.qoder/
+/.trae/
+/testpics/
 
 # Editor directories and files
 .vscode/*

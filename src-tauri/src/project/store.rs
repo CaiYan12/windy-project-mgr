@@ -34,12 +34,11 @@ impl Store {
                 detail: "file is empty".to_string(),
             });
         }
-        let versioned: Versioned<Payload> = serde_json::from_str(&raw).map_err(|e| {
-            StoreError::Corrupted {
+        let versioned: Versioned<Payload> =
+            serde_json::from_str(&raw).map_err(|e| StoreError::Corrupted {
                 path: path.to_path_buf(),
                 detail: e.to_string(),
-            }
-        })?;
+            })?;
         if versioned.version != CURRENT_VERSION {
             return Err(StoreError::VersionMismatch {
                 found: versioned.version,
@@ -59,9 +58,8 @@ impl Store {
                 projects: self.projects.clone(),
             },
         };
-        let json = serde_json::to_string_pretty(&versioned).map_err(|e| StoreError::Io(
-            std::io::Error::new(std::io::ErrorKind::InvalidData, e),
-        ))?;
+        let json = serde_json::to_string_pretty(&versioned)
+            .map_err(|e| StoreError::Io(std::io::Error::new(std::io::ErrorKind::InvalidData, e)))?;
         write_atomic(path, &json)
     }
 

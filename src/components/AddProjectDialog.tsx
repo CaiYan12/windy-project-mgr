@@ -6,7 +6,7 @@ import { open as openFilePicker } from "@tauri-apps/plugin-dialog";
 import { Modal } from "./Modal";
 import { parseTags, ProjectFields, type ProjectFormState } from "./ProjectFields";
 import { createProject, listScripts } from "../lib/api";
-import { lastSegment } from "../lib/paths";
+import { lastSegment, samePath } from "../lib/paths";
 import type { Project, StartupScript } from "../types/project";
 
 const emptyForm: ProjectFormState = {
@@ -19,9 +19,11 @@ const emptyForm: ProjectFormState = {
 };
 
 export function AddProjectDialog({
+  projects,
   onClose,
   onCreated,
 }: {
+  projects: Project[];
   onClose: () => void;
   onCreated: (project: Project) => void;
 }) {
@@ -53,6 +55,13 @@ export function AddProjectDialog({
     setError(null);
     if (!form.path.trim() || !form.name.trim()) {
       setError("Path and name are required.");
+      return;
+    }
+    // D3：路径查重在第一步即拦截（与后端提交校验同口径，文案一致），
+    // 避免用户走到脚本引导页才得知重复。
+    const dup = projects.find((p) => samePath(p.path, form.path.trim()));
+    if (dup) {
+      setError(`duplicate project path: ${dup.path} (edit the existing record instead)`);
       return;
     }
     setBusy(true);

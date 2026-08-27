@@ -100,11 +100,9 @@ fn require_dir(path: &Path) -> Result<(), ScannerError> {
         Ok(_) => Err(ScannerError::PathNotFound {
             path: path.to_path_buf(),
         }),
-        Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
-            Err(ScannerError::PathNotFound {
-                path: path.to_path_buf(),
-            })
-        }
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Err(ScannerError::PathNotFound {
+            path: path.to_path_buf(),
+        }),
         Err(e) if e.kind() == std::io::ErrorKind::PermissionDenied => {
             Err(ScannerError::PermissionDenied {
                 path: path.to_path_buf(),

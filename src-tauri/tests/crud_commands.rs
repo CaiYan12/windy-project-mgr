@@ -4,7 +4,7 @@ use std::path::PathBuf;
 use std::sync::atomic::{AtomicU64, Ordering};
 use windy_project_mgr_lib::commands::project::{
     create_project_in, delete_project_in, get_project_in, get_projects_in, update_project_in,
-    CreateProjectInput,
+    portable_data_dir, CreateProjectInput,
 };
 use windy_project_mgr_lib::project::{Project, StoreError};
 
@@ -34,6 +34,35 @@ fn input(name: &str, path: &str) -> CreateProjectInput {
         run_command: None,
         build_command: None,
     }
+}
+
+#[test]
+fn portable_data_dir_is_sibling_of_executable() {
+    let executable = PathBuf::from(r"C:\Apps\Windy\windy-project-mgr.exe");
+
+    let data_dir = portable_data_dir(&executable).expect("executable has parent");
+
+    assert_eq!(data_dir, PathBuf::from(r"C:\Apps\Windy\data"));
+}
+
+#[test]
+fn portable_data_dir_preserves_spaces_in_parent_path() {
+    let executable = PathBuf::from(r"D:\Portable Apps\Windy Project Manager\windy-project-mgr.exe");
+
+    let data_dir = portable_data_dir(&executable).expect("executable has parent");
+
+    assert_eq!(
+        data_dir,
+        PathBuf::from(r"D:\Portable Apps\Windy Project Manager\data")
+    );
+}
+
+#[test]
+fn portable_data_dir_rejects_parentless_path() {
+    let error = portable_data_dir(PathBuf::from("windy-project-mgr.exe").as_path())
+        .expect_err("parentless executable path must fail");
+
+    assert!(error.to_string().contains("executable directory is unavailable"));
 }
 
 // ---------- Create / Read ----------

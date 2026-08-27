@@ -302,7 +302,7 @@ interface ActivityMetadata {
 第一版使用：
 
 ```text
-%APPDATA%\windy-project-mgr\projects.json
+<EXE目录>\data\projects.json
 ```
 
 格式：
@@ -980,7 +980,7 @@ Scanner 失败
 ```text
 Frontend build
 Rust build
-Tauri bundle
+Green ZIP (`build.bat` → `pnpm tauri build --no-bundle`)
 Application startup
 Application persistence
 Core functions
@@ -1572,12 +1572,13 @@ What remains
 
 本节为 2026-08-25 Grilling Session 逐项确认的收紧决策，覆盖第 1~28 节中原本未定义或含糊的部分。与前文冲突时以本节为准。
 
-## D1 主题系统（新增）
+## D1 主题系统（新增，Settings v2 扩展）
 
 - 全局单样式表 + CSS 变量：颜色、间距、圆角、状态色全部走变量，零样式依赖。
-- 亮 / 暗两套完整变量集，通过根节点 `data-theme` 属性切换；提供 亮 / 暗 / 跟随系统 三个选项。
-- 默认跟随系统；用户手动选择持久化到 `settings.json`（见 D6）。
-- 扩展点：未来“主题预设”= 追加变量集 + 预设元数据，不改切换机制。MVP 不实现预设与主题编辑。
+- 亮 / 暗两套完整变量集，通过根节点 `data-theme` 属性切换；提供亮 / 暗 / 跟随系统三个选项。
+- 强调色与 Color Mode 独立保存：提供 Windy teal、Ocean blue、Violet、Amber、Coral、Rose 六个预设、Windows 当前强调色和自定义 `#RRGGBB`；由选中色值派生 accent、hover、soft、focus、on-accent 变量。
+- 默认跟随系统 + Windy teal；用户选择持久化到 v2 `settings.json`。读取 Windows 强调色失败时回退 Windy teal 并提示，不建立实时监听。
+- Settings v2 通过 `version` 区分结构；旧 v1 的 `theme` 自动迁移为 `colorMode`，旧 `editorCommand` 自动迁移为 Editor Profile。
 - 此项决策需落盘为 ADR（见 D13）。
 
 ## D2 扫描策略（收紧第 6 节）
@@ -1610,12 +1611,13 @@ What remains
 - 引导只作用于 `runCommand`；`buildCommand` 保持手动输入。
 - 脚本类命令与手填命令走同一套 detached 终端机制（D4）。
 
-## D6 在编辑器中打开（新增，扩展第 9 节 Command 基线）
+## D6 在编辑器中打开（新增，扩展第 9 节 Command 基线；Settings v2 扩展）
 
-- 新增持久化文件 `%APPDATA%\windy-project-mgr\settings.json`（含 `version` 字段，与 `projects.json` 同机制：写临时文件再替换、损坏可诊断）；MVP 字段两项：`editorCommand`（本决策）与 `theme`（D1 主题选择）。
-- 编辑器用命令名识别，不做安装探测；设置 Dialog 提供预设下拉（`code` / `code-insiders` / `cursor`）+ 自定义输入。
-- 入口：项目卡片 More 菜单 + Project Detail Actions；未配置时显示 `Editor not configured` 并引导去设置。
-- 新增 Tauri Command：`get_settings` / `update_settings` / `open_in_editor`。
+- 持久化文件为 `<EXE目录>\data\settings.json`，含 `version` 字段，与 `projects.json` 同机制：写临时文件再替换、损坏可诊断；v2 结构包含 `colorMode`、`accentColor` 与 `editor: { executable, arguments }`。D14 将全部运行形态统一为 EXE 相邻 `data\`，不读取或自动迁移旧 AppData 数据。
+- 设置 Dialog 的 Editor 页读取真实存在的编辑器：VS Code、VS Code Insiders、Cursor、Windsurf、VSCodium、Zed；检测来源包括 `where.exe`、Windows 卸载注册表和少量标准安装目录。无法证明产品身份的 PATH 命令按 PATH command 显示，不误标产品。
+- 提供 Other 文件选择器，只允许选择 `.exe`；实际可执行路径和逐行参数均可编辑。每个已配置 Editor Profile 的参数必须恰好包含一个 `{path}`，该占位符替换为项目目录完整路径，工作目录始终为项目目录并按文件类型启动：`.exe` 直接启动，`.cmd` / `.bat` 经 `cmd.exe /d /c` 启动。
+- 入口：项目卡片 More 菜单 + Project Detail Actions；未配置时显示 `Editor not configured` 并引导去设置。任意 Other 程序仅保证启动，不保证程序自身支持文件夹工作区。
+- 新增 Tauri Command：`get_settings` / `update_settings` / `open_in_editor` / `detect_editors` / `get_windows_accent_color` / `get_app_info`。
 
 ## D7 Search（收紧）
 
@@ -1676,20 +1678,21 @@ What remains
 | Phase | 增量调整 |
 |---|---|
 | 0 | 增加 rustup 安装与验证（本机实测未安装；`winget install Rustlang.Rustup` 或 rustup-init.exe，默认 stable + `x86_64-pc-windows-msvc`），结果记入环境审计表 |
-| 1 | 增加 `CONTEXT.md`、3 份 ADR、`TESTING.md` 验收清单骨架（D13） |
+| 1 | 增加 `CONTEXT.md`、ADR、`TESTING.md` 验收清单骨架（D13）；Settings v2 规格、计划和 ADR 0005 同步归档 |
 | 2 | 使用 pnpm 初始化（D11）；确认 `pnpm tauri dev` 与 production build 可用 |
-| 4 | 数据层增加 `settings.json` 读写，与 `projects.json` 同机制：`version` 字段、写临时文件再替换、损坏可诊断（D6） |
+| 4 | 数据层增加 v2 `settings.json` 读写与 v1 自动迁移，与 `projects.json` 同机制：`version` 字段、写临时文件再替换、损坏可诊断（D6） |
 | 5 | CRUD 增加查重测试用例：重复路径、大小写变体、末尾分隔符变体（D3）；删除确认交互在 Phase 8 UI 层实现 |
 | 6 | Scanner 增加根目录启动脚本枚举：全部 `*.bat` / `*.cmd` / `*.ps1`，按 D5 排序（D5） |
 | 7 | Git Scanner 按 D8 边界实现；测试必须含：无上游分支、空仓库、detached HEAD |
 | 8 | Dashboard：卡片骨架先行 + 并发扫描逐卡填充（D2）；Sidebar 标签过滤 + 设置入口（D9）；Search（D7）；卡片 More 菜单含“在编辑器中打开”（D6）；两步 Add Dialog（D10）；删除确认 Dialog |
 | 9 | Detail Actions 增加“在编辑器中打开”（D6）；手动刷新按钮（D2） |
 | 10 | Run / Build 按 D4 语义；新增 `get_settings` / `update_settings` / `open_in_editor`（D6） |
-| 11 | 主题系统（D1）：亮 / 暗两套变量集、`data-theme` 切换、跟随系统默认、选择持久化；设置 Dialog（主题 + 编辑器配置） |
+| 11 | 主题系统（D1）：亮 / 暗两套变量集、`data-theme` 切换、跟随系统默认、六种预设 / Windows / 自定义强调色与持久化；Settings v2 三分页（Appearance / Editor / General） |
 | 12 | 人工验收清单覆盖新增功能：脚本识别引导、编辑器打开、主题切换与持久化、查重拒绝 |
-| 13 / 14 | 不变；体积实测要求不变 |
+| 13 | `build.bat` 生成绿色目录与版本化 ZIP；不生成 MSI/NSIS；实测解压启动、EXE 相邻 `data\` 与产物体积（D14） |
+| 14 | 最终验收范围不变，Production 对象改为绿色 ZIP |
 
-Tauri Command 全集（第 9 节基线 + D6 增量）：
+Tauri Command 全集（第 9 节基线 + D5 / D6 增量）：
 
 ```text
 get_projects
@@ -1698,12 +1701,16 @@ create_project
 update_project
 delete_project
 scan_project
+list_scripts
 open_project
 run_project
 build_project
 get_settings
 update_settings
 open_in_editor
+detect_editors
+get_windows_accent_color
+get_app_info
 ```
 
 ---
@@ -1715,5 +1722,15 @@ open_in_editor
 1. **主题**：亮 / 暗 / 跟随系统三种行为正确；用户手动选择重启后保留。
 2. **查重**：重复添加同一路径（含大小写变体、末尾分隔符变体）被拒绝并有明确提示。
 3. **脚本引导**：含启动脚本的目录，Add Dialog Step 2 正确列出候选并按 `start` > `run` > 字母序规则预选。
-4. **编辑器入口**：`editorCommand` 已配置时，卡片 More 菜单与 Detail 均可拉起编辑器；未配置时显示 `Editor not configured` 并引导配置。
+4. **编辑器入口**：Settings v2 的 Editor Profile 已配置时，卡片 More 菜单与 Detail 均可按 `{path}` 打开项目目录；未配置时显示 `Editor not configured` 并引导配置；Other 仅保证程序启动，不保证程序自身支持文件夹工作区。
 5. **离线可用**：无网络环境下所有功能可用（无任何 `git fetch` / 网络依赖）。
+
+---
+
+# 32. 绿色 ZIP 与完全便携数据（D14，2026-08-26）
+
+- 所有运行形态统一将 `projects.json` 与 `settings.json` 保存到当前 EXE 同目录的 `data\`。
+- 不使用便携标记，不保留 `%APPDATA%` 回退，不自动读取、复制或删除旧 AppData 数据。
+- 开发数据位于 `src-tauri\target\debug\data\`；执行 `cargo clean` 会删除开发数据，此后果已明确接受。
+- 正式交付入口为根目录 `build.bat`，由 `build.ps1` 执行 `pnpm tauri build --no-bundle`。
+- 输出为 `build\win-unpacked\`、版本化 `release\` 目录及其 ZIP；ZIP 解压后直接运行，不生成 MSI/NSIS。

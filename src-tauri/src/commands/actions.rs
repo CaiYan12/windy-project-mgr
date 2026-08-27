@@ -24,6 +24,11 @@ pub fn update_settings_in(
     Ok(settings)
 }
 
+pub fn open_in_editor_in(data_dir: &Path, path: &Path) -> Result<(), String> {
+    let settings = get_settings_in(data_dir).map_err(|e| e.to_string())?;
+    launch::open_in_editor(&settings.editor, path).map_err(|e| e.to_string())
+}
+
 // ---------- Tauri command 薄封装 ----------
 
 #[tauri::command]
@@ -59,6 +64,5 @@ pub fn build_project(path: String, command: String) -> Result<(), String> {
 #[tauri::command]
 pub fn open_in_editor(path: String) -> Result<(), String> {
     let data_dir = super::project::app_data_dir().map_err(|e| e.to_string())?;
-    let settings = get_settings_in(&data_dir).map_err(|e| e.to_string())?;
-    launch::open_in_editor(&settings.editor_command, Path::new(&path)).map_err(|e| e.to_string())
+    open_in_editor_in(&data_dir, Path::new(&path))
 }

@@ -60,3 +60,14 @@ export function relativeTime(iso: string, now: number): string {
   }
   return iso.slice(0, 10);
 }
+
+/** UTC ISO 时刻 → 本地 `YYYY-MM-DD HH:mm`（Created 等持久化字段展示）；不可解析时原样返回。 */
+export function formatDateTime(iso: string): string {
+  const t = Date.parse(iso);
+  if (Number.isNaN(t)) {
+    return iso;
+  }
+  const d = new Date(t);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}

@@ -6,6 +6,64 @@ MVP 完成前无正式版本号，变更记于 `Unreleased`。
 
 ## Unreleased
 
+### 2026-08-27 — Phase 14 最终验收完成与计划文档清理
+
+- **最终验收**：用户确认 Functional、Error Handling、UX、Stability、Production 及五项增量验收全部通过，进度更新为 15 / 15 Phase、34 / 34 子任务，MVP 交付闭环。
+- **文档同步**：同步 README、AGENTS、PROJECT_STATUS、HANDOFF、TESTING 与 `docs/PLAN.MD` 的最终状态；仅删除本次 Settings v2 的设计规格和实施计划，保留执行证据、源码测试与正式交付文档。
+
+### 2026-08-27 — Settings v2 验收收尾与 Other 编辑器路径修复
+
+- **设置中心 v2**：完成 Appearance / Editor / General 三分页、颜色模式与强调色分离、六个预设色、Windows 当前主题色、自定义 `#RRGGBB`、真实编辑器发现、Other `.exe` 选择、逐行参数与 `{path}` 文件夹工作区约束。
+- **验收中修复的 bug**：修复含空格路径的 Run / Build PowerShell 启动参数边界；修复 `.cmd` / `.bat` 编辑器启动与参数边界；修复 Windows accent 异步响应在关闭后覆盖预览；补齐 pending close 防护、Reset alertdialog 焦点/描述和旧 v1 CSS 清理；修复 Other 选择未扫描到的可执行文件后列表不显示所选路径的问题。
+- **真实窗口验收**：Light / Dark / Follow system 即时切换与重启持久化、六种预设 / Windows / Custom、Cancel 恢复、General 信息、编辑器发现、VS Code 与 Qoder 文件夹工作区、Other 选择与保存/重开、`{path}` 校验及未配置提示均通过。
+- **边界说明**：任意 Other 程序只保证启动，不保证支持文件夹工作区；Notepad 启动后由自身提示无法打开文件夹，VS Code / Qoder 的实测证明工作区能力。物理断网、真实多宽度调整和破坏性 Reset now 本轮未执行。
+- **验证**：`pnpm vitest run` 64/64、`cargo test --manifest-path src-tauri/Cargo.toml` 148/148、`pnpm build`、`git diff --check` 通过。证据：`.superpowers/sdd/2026-08-27-settings-overhaul/task-7-report.md` 与 `task-8-bugfix-report.md`。
+
+### 2026-08-27 — Task 5 / Stage 6 strict re-review
+
+- Re-review result: `CHANGES REQUIRED`. Build, Vitest and diff checks pass, but a pending Windows accent request can call the parent preview callback after Settings unmounts; the inline reset `alertdialog` lacks complete focus/description semantics; and residual v1 Settings CSS remains. Evidence: `.superpowers/sdd/2026-08-27-settings-overhaul/task-5-rereview.md`.
+
+### 2026-08-27 — Task 5 UI review 修复
+
+- 修复 Settings 的 Windows accent 父子状态同步、旧异步响应覆盖草稿、Save/Reset pending 关闭竞态与 system `matchMedia` 亮暗切换；`applyTheme` 支持显式系统偏好。
+- Modal 增加 `aria-modal` 对应的初始焦点、Tab 陷阱、关闭后焦点回收与 `closeDisabled`；补齐 tabpanel、accent radio、Editor listitem 语义及 320px alert 断词收缩。
+- 新增 `src/lib/settingsUi.ts` 与 9 个纯逻辑/静态契约回归测试；移除确认无引用的 v1 settings CSS 块。验证：`pnpm vitest run` 59/59、`pnpm build`、`git diff --check` 通过。
+
+### 2026-08-27 — Settings v2 Task 5 三分页设置界面
+
+- **SettingsDialog**：新增 Appearance / Editor / General 三分页，使用浏览器 tab 语义与 Arrow/Home/End 键盘导航；Appearance 即时预览 color mode、六个 `ACCENT_PRESETS`、Windows 色和自定义 `#RRGGBB`，Cancel/Esc/遮罩/关闭恢复已保存主题状态
+- **Editor**：仅进入页面时调用 `detect_editors`，展示 DTO 返回的真实名称、路径和 Path/Registry/Standard 来源；Other 通过 Tauri dialog 选择 `.exe`，参数逐行编辑并复用 `validateEditorProfile` 校验 `{path}` 与 batch 引号约束
+- **General / App**：进入页面调用 `get_app_info`；Reset settings 二次确认后只调用 `update_settings`，App 启动读取 v2 settings 与 Windows accent，读取失败保留可见错误并回退 Windy teal
+- **样式与验证**：保留 Windy teal / paper 基底，增加宽版设置布局和 320/768/1024/1440 适配规则；分页指示器仅使用 180ms cubic-bezier transform/opacity，并支持 reduced motion。`pnpm vitest run` 50/50、`pnpm build`、`git diff --check` 通过
+
+### 2026-08-27 — Task 3 launcher fix3 最终修复
+
+- **PowerShell**：run/build 保留普通命令原文；盘符/UNC/已知扩展名路径按可执行路径与参数分离包装；有 cwd 且文件真实存在的 extensionless 路径在 `ps_plan` / `wt_plan` 中正确分离；无法无歧义识别的裸 extensionless 路径保持原文
+- **Batch 安全契约**：`.cmd` / `.bat` 完全大小写不敏感地直接走 `cmd.exe /d /s /c`；脚本路径和每个参数只经子进程专属环境变量传入，`/c` 使用 raw argument；字面双引号在 settings 校验和 launcher 兜底均拒绝，错误文案为 `cmd.exe batch arguments cannot contain the double quote character`；直接 `.exe` 不受该限制
+- **测试**：真实 Windows batch 夹具覆盖空格、字面 `%PATH%`、`&`、`!` 及组合值，并覆盖 batch 双引号拒绝、混合扩展名、路径+参数、路径-only 与错误语义
+- **验证**：`cargo test --manifest-path src-tauri/Cargo.toml --test launch --test actions_commands`（42/42）；`cargo test --manifest-path src-tauri/Cargo.toml`（146/146）；`git diff --check` 通过
+
+### 2026-08-26 — Phase 12 全链路集成测试验收
+
+- **人工验收**：`TESTING.md` B 节 6 项全部通过（非 Git / 不存在路径 / 损坏 JSON / Run 与 Build 启动失败 / 空仓库 / detached HEAD）；C 节主题三态与重启持久化、编辑器卡片与详情入口、未配置提示、离线边界全部通过；既有查重与脚本引导保持通过
+- **验收中修复**：主题在 Settings 中切换后即时预览，并在取消时恢复已保存主题；Add 路径 Browse 按钮记忆位置；查重提前到 Add 第一步；详情卡片等高；Created 使用本地时间；Modal 头尾分隔线内缩、删除确认框窄版；菜单 Delete 红字；Run / Build 对含空格路径使用 PowerShell `& '...'` 包裹
+- **异常证据**：损坏文件保留为原始 `###` 未被覆盖；无效路径不影响其它卡片，Run / Build 仅显示 `path not found` Toast；空仓库显示 `No commits yet`；detached 仓库显示 `detached@<短hash>`；离线检查确认 Git 仅调用本地 CLI 且无 `git fetch` / 网络连接
+- **验证**：`pnpm vitest run` 37/37、`cargo test` 101/101、`pnpm build` 通过；测试结束后恢复开发数据为原始 `node-app-e` 与 `plain-dir` 两条记录，settings 恢复 `theme=system` / `editorCommand=""`
+
+### 2026-08-26 — Phase 13 绿色 ZIP 与完全便携数据（D14）
+
+- **便携数据**：`app_data_dir()` 不再读取 `%APPDATA%`，统一通过 `current_exe()` 将 `projects.json` / `settings.json` 保存到当前 EXE 同目录 `data\`；不设标记、不回退、不自动迁移或删除旧数据。新增 4 个集成测试覆盖普通路径、空格路径、无父目录错误与真实设置落盘
+- **绿色构建**：新增 ASCII-only `build.bat` 与 PowerShell 7 `build.ps1`；执行 `pnpm tauri build --no-bundle`，从 `tauri.conf.json` / `cargo metadata` 解析精确产物名，安全清理并生成 `build\win-unpacked\`、版本化 release 目录和 ZIP，不生成 MSI/NSIS
+- **实测**：release 优化编译 1m42s；EXE 9.27 MiB，ZIP 2.86 MiB。ZIP 精确包含版本目录、空 `data\` 与单个 EXE；临时解压后的 EXE 启动且窗口正常响应，便携设置组合测试确认 `data\settings.json` 落点
+- **验证**：`cargo test` 101/101、`pnpm vitest run` 36/36、`pnpm build` 通过；PowerShell AST、batch ASCII、严格 UTF-8、ZIP 内容与 Git 差异检查均纳入最终验证
+- **文档**：新增 ADR 0004，更新 AGENTS / PLAN / Primary Document / README / TESTING / PROJECT_STATUS；Phase 13 勾选完成，进度更新为 13/15 Phase、30/34 子任务
+
+### 2026-08-26 — Cargo dev/test 构建缓存治理
+
+- **配置**：`src-tauri/Cargo.toml` 为 dev/test profile 设置 `debug = "line-tables-only"`，保留源文件与行号信息，限制 Windows PDB 与 `target/` 增长；release profile 未改
+- **冷启动实测**：完整 `cargo clean` 后 `start.bat` 正常启动，Vite 283ms ready，Rust 374 构建单元 56.84s，Tauri 窗口正常响应；`target` 2.169 GiB，对比完整调试信息下同条件基线 4.529 GiB，减少 52.1%
+- **测试与体积**：`cargo test` 97/97 通过（10.09s）；测试后 `target` 2.448 GiB，对比治理前历史状态 9.99 GiB 减少 75.5%；`debug/deps` PDB 由 1.964 GiB 降至 0.240 GiB
+
 ### 2026-08-25 — Phase 11 UI Polish + 主题系统
 
 - **主题系统（D1 / ADR 0003）**：`App.css` 将暗色变量集拆为 `:root[data-theme="dark"]`（强制暗，覆盖系统偏好）与 `@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) }`（跟随系统，强制亮的 `data-theme="light"` 被排除）；三态 `system` / `light` / `dark` 齐全。新增 `lib/theme.ts`（`Theme` 类型 / `isValidTheme` / `applyTheme` / `THEMES` / `EDITOR_PRESETS`，纯逻辑 TDD 红→绿 4 个 vitest）

@@ -1,7 +1,7 @@
 // Dashboard（原始文档第 10 节：Sidebar + Toolbar + Card Grid）。
 // D2：启动即渲染卡片骨架，并发扫描逐卡填充；结果仅存内存。
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Sidebar, type TagCount } from "./components/Sidebar";
 import { ProjectCard } from "./components/ProjectCard";
 import { ProjectDetail } from "./pages/ProjectDetail";
@@ -15,13 +15,24 @@ import {
   deleteProject,
   getProjects,
   getSettings,
+  getWindowsAccentColor,
   openInEditor,
   openProject,
   runProject,
   scanProject,
   type AppSettings,
 } from "./lib/api";
-import { applyTheme, isValidTheme } from "./lib/theme";
+import {
+  applyTheme,
+  captureThemeState,
+  isValidHexColor,
+  restoreThemeState,
+  previewTheme,
+  PREFERS_DARK_QUERY,
+  prefersDarkColorScheme,
+  type ThemeState,
+} from "./lib/theme";
+import { createRequestGeneration } from "./lib/settingsUi";
 import type { Project, ScanState } from "./types/project";
 import "./App.css";
 
@@ -31,6 +42,18 @@ type Dialog =
   | { kind: "delete"; project: Project }
   | { kind: "settings" }
   | null;
+
+type SettingsPreview = {
+  colorMode: AppSettings["colorMode"];
+  accentColor: AppSettings["accentColor"];
+  windowsAccentColor: string | null;
+};
+
+const DEFAULT_SETTINGS: AppSettings = {
+  colorMode: "system",
+  accentColor: { kind: "preset", value: "windy-teal" },
+  editor: { executable: "", arguments: ["{path}"] },
+};
 
 function App() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -42,21 +65,91 @@ function App() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [settings, setSettings] = useState<AppSettings | null>(null);
+  const [settingsError, setSettingsError] = useState<string | null>(null);
+  const [windowsAccentColor, setWindowsAccentColor] = useState<string | null>(null);
+  const [windowsAccentError, setWindowsAccentError] = useState<string | null>(null);
+  const [settingsPreviewState, setSettingsPreviewState] = useState<ThemeState | null>(null);
+  const [settingsPreview, setSettingsPreview] = useState<SettingsPreview | null>(null);
+  const [prefersDark, setPrefersDark] = useState(() =>
+    typeof document !== "undefined" ? prefersDarkColorScheme(document.documentElement) : false,
+  );
+  const windowsAccentGeneration = useRef(createRequestGeneration());
 
   const selected = selectedId ? projects.find((p) => p.id === selectedId) ?? null : null;
 
-  // 启动加载设置（主题持久化 D1），失败回退默认（跟随系统 + 空编辑器）。
-  useEffect(() => {
-    getSettings().then(setSettings).catch(() => {
-      setSettings({ theme: "system", editorCommand: "" });
-    });
+  const loadSettings = useCallback(async () => {
+    try {
+      setSettings(await getSettings());
+      setSettingsError(null);
+    } catch (error) {
+      setSettings({
+        colorMode: DEFAULT_SETTINGS.colorMode,
+        accentColor: { ...DEFAULT_SETTINGS.accentColor },
+        editor: { ...DEFAULT_SETTINGS.editor, arguments: [...DEFAULT_SETTINGS.editor.arguments] },
+      });
+      setSettingsError(`Could not load settings: ${String(error)}`);
+    }
   }, []);
 
-  // 应用主题到根节点：settings 到场后按持久化值设置 data-theme（重启保留）。
+  const loadWindowsAccent = useCallback(async () => {
+    const request = windowsAccentGeneration.current.next();
+    try {
+      const value = await getWindowsAccentColor();
+      if (!windowsAccentGeneration.current.isCurrent(request)) {
+        return;
+      }
+      if (!isValidHexColor(value)) {
+        throw new Error("Windows accent color returned an invalid #RRGGBB value");
+      }
+      setWindowsAccentColor(value);
+      setWindowsAccentError(null);
+    } catch (error) {
+      if (!windowsAccentGeneration.current.isCurrent(request)) {
+        return;
+      }
+      setWindowsAccentColor(null);
+      setWindowsAccentError(`Could not read the Windows accent color: ${String(error)}`);
+    }
+  }, []);
+
   useEffect(() => {
-    const theme = settings && isValidTheme(settings.theme) ? settings.theme : "system";
-    applyTheme(document.documentElement, theme);
-  }, [settings]);
+    void loadSettings();
+    void loadWindowsAccent();
+  }, [loadSettings, loadWindowsAccent]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+      return;
+    }
+
+    const media = window.matchMedia(PREFERS_DARK_QUERY);
+    const onChange = (event: MediaQueryListEvent) => setPrefersDark(event.matches);
+    setPrefersDark(media.matches);
+    media.addEventListener("change", onChange);
+    return () => media.removeEventListener("change", onChange);
+  }, []);
+
+  useEffect(() => {
+    if (settingsPreview) {
+      applyTheme(
+        document.documentElement,
+        settingsPreview.colorMode,
+        settingsPreview.accentColor,
+        settingsPreview.windowsAccentColor,
+        prefersDark,
+      );
+      return;
+    }
+
+    const activeSettings = settings ?? DEFAULT_SETTINGS;
+    applyTheme(
+      document.documentElement,
+      activeSettings.colorMode,
+      activeSettings.accentColor,
+      windowsAccentColor,
+      prefersDark,
+    );
+  }, [settings, settingsPreview, settingsPreviewState, windowsAccentColor, prefersDark]);
 
   const showToast = useCallback((message: string) => {
     setToast(message);
@@ -140,6 +233,32 @@ function App() {
     action().catch((e) => showToast(String(e)));
   }
 
+  function openSettings() {
+    setSettingsPreviewState(captureThemeState(document.documentElement));
+    setSettingsPreview(null);
+    setDialog({ kind: "settings" });
+  }
+
+  function closeSettings() {
+    setSettingsPreview(null);
+    setSettingsPreviewState(null);
+    setDialog(null);
+  }
+
+  function restoreSettingsTheme() {
+    if (settingsPreviewState) {
+      restoreThemeState(document.documentElement, settingsPreviewState);
+    }
+  }
+
+  const previewSettingsTheme = useCallback(
+    (colorMode: AppSettings["colorMode"], accentColor: AppSettings["accentColor"], windowsColor: string | null) => {
+      setSettingsPreview({ colorMode, accentColor, windowsAccentColor: windowsColor });
+      previewTheme(document.documentElement, colorMode, accentColor, windowsColor);
+    },
+    [],
+  );
+
   return (
     <div className="app">
       <Sidebar
@@ -147,7 +266,7 @@ function App() {
         tags={tags}
         activeTag={activeTag}
         onSelectTag={setActiveTag}
-        onOpenSettings={() => setDialog({ kind: "settings" })}
+        onOpenSettings={openSettings}
       />
 
       <main className="main">
@@ -219,7 +338,11 @@ function App() {
       </main>
 
       {dialog?.kind === "add" && (
-        <AddProjectDialog onClose={() => setDialog(null)} onCreated={handleCreated} />
+        <AddProjectDialog
+          projects={projects}
+          onClose={() => setDialog(null)}
+          onCreated={handleCreated}
+        />
       )}
       {dialog?.kind === "edit" && (
         <EditProjectDialog
@@ -245,8 +368,22 @@ function App() {
       {dialog?.kind === "settings" && (
         <SettingsDialog
           settings={settings}
-          onClose={() => setDialog(null)}
-          onSaved={(s) => setSettings(s)}
+          windowsAccentColor={windowsAccentColor}
+          settingsError={settingsError}
+          windowsAccentError={windowsAccentError}
+          onClose={closeSettings}
+          onWindowsAccentResult={(color, error) => {
+            windowsAccentGeneration.current.next();
+            setWindowsAccentColor(color);
+            setWindowsAccentError(error);
+          }}
+          onSaved={(saved) => {
+            setSettings(saved);
+            setSettingsError(null);
+          }}
+          onThemePreview={previewSettingsTheme}
+          onThemeRestore={restoreSettingsTheme}
+          onRetrySettings={() => void loadSettings()}
         />
       )}
 

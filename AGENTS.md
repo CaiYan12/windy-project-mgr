@@ -98,17 +98,17 @@ The self-check question: "If a fresh agent starts tomorrow and reads only AGENTS
 
 ## Repository Status
 
-This repository is **in development** (Phase 0~11 done; progress tracked in `docs/PLAN.MD` section 0). Top-level layout: documentation (`docs/`, `CONTEXT.md`, `TESTING.md`, `PROJECT_STATUS.md`, `CHANGELOG.md`) plus the app code — `src/` (React 19 + TS 5.8 + Vite 7 frontend: Dashboard and Detail implemented — `components/` Sidebar/Card/Dialogs, `pages/ProjectDetail.tsx` (seven sections + degraded states), `lib/` api+search+cards+paths+theme with 29 vitest pure-logic tests, `types/`; theme system with `data-theme` applies persisted `settings.theme`), `src-tauri/` (Tauri 2.11.5, identifier `com.windy.project-mgr`; data layer in `src/project/`, CRUD commands in `src/commands/project.rs`, scan commands in `src/commands/scan.rs`, action/settings commands in `src/commands/actions.rs`, scanner in `src/scanner/mod.rs`, git scanner in `src/git/mod.rs` (system Git CLI, offline per D8), detached launcher in `src/launch/mod.rs` (D4), 94 passing cargo tests), and root Vite/TS configs. Documentation inventory:
+This repository has completed MVP implementation, integration, production build, and final acceptance (15 / 15 Phases, 34 / 34 subtasks; progress tracked in `docs/PLAN.MD` section 0). Top-level layout: documentation (`docs/`, `CONTEXT.md`, `TESTING.md`, `PROJECT_STATUS.md`, `CHANGELOG.md`) plus the app code — `src/` (React 19 + TS 5.8 + Vite 7 frontend: Dashboard and Detail implemented — `components/` Sidebar/Card/Dialogs, `pages/ProjectDetail.tsx` (seven sections + degraded states), `lib/` api+search+cards+paths+theme+settingsUi with v2 settings types/helpers and 64 Vitest tests, `types/`; theme system with `data-theme` and accent CSS variables applies persisted v2 settings, while `SettingsDialog` edits `settings.editor`), `src-tauri/` (Tauri 2.11.5, identifier `com.windy.project-mgr`; data layer in `src/project/`, CRUD commands in `src/commands/project.rs`, scan commands in `src/commands/scan.rs`, action/settings commands in `src/commands/actions.rs`, system commands in `src/commands/system.rs`, scanner in `src/scanner/mod.rs`, git scanner in `src/git/mod.rs` (system Git CLI, offline per D8), detached launcher in `src/launch/mod.rs` (D4), executable-relative portable data directory (D14), 148 passing Cargo tests in the 2026-08-27 full run), and root Vite/TS configs. `build.bat` / `build.ps1` produce the green directory and ZIP. Documentation inventory:
 
 - `docs/Windy Project Manager - Primary Request&Plan Document.md` — original requirements and development rules (sections 1~28 baseline; sections 29~31 decision extensions). This is the authoritative spec.
-- `docs/PLAN.MD` — self-contained executable plan: decisions D1~D13, Phase 0~14, acceptance criteria, and the checkbox progress tracker (section 0).
+- `docs/PLAN.MD` — self-contained executable plan: decisions D1~D14, Phase 0~14, acceptance criteria, and the checkbox progress tracker (section 0).
 - `README.md` — containing basic project info and to-do list.
 - `AGENTS.md` — basic agents' working needing messages, rules and guidelines
 - `PROJECT_STATUS.md` — live development status plus the measured environment audit table (created in Phase 0)
 - `CONTEXT.md` — domain glossary (D13, Phase 1)
 - `CHANGELOG.md` — running record of completed changes (Phase 1 onward)
-- `TESTING.md` — manual acceptance checklist skeleton, unchecked until Phase 12/14 (D13)
-- `docs/adr/0001~0003` — ADRs for scan-data-memory-only (D2), detached run/build (D4), CSS-variable theming (D1)
+- `TESTING.md` — manual acceptance checklist for Phase 12/14, final acceptance completed (D13)
+- `docs/adr/0001~0005` — ADRs for scan-data-memory-only (D2), detached run/build (D4), CSS-variable theming and accent colors (D1), portable data + green ZIP (D14), and Settings v2 editor discovery
 
 Before the first of coding work, read `docs/PLAN.MD` first; it supersedes the primary document where they conflict.
 
@@ -119,21 +119,24 @@ All commands below are **runnable** since Phase 2 (project scaffolding) complete
 ```powershell
 pnpm install                 # install frontend deps
 pnpm tauri dev               # dev mode (Vite + Tauri window)
-pnpm tauri build             # production bundle (Phase 13; sizes must be measured, not estimated)
+.\build.bat                  # green ZIP release: build/win-unpacked + versioned release directory/zip
+pnpm tauri build --no-bundle # underlying release EXE build used by build.bat
 cargo test                   # Rust unit + integration tests (src-tauri)
 cargo test <test_name>       # run a single Rust test
-pnpm vitest run              # frontend pure-logic tests only (search filter, path dedup normalization, card data assembly)
+pnpm vitest run              # frontend pure-logic/static-contract tests (search, cards, theme, settings, and path helpers)
 pnpm vitest run <file>       # run a single frontend test file
 pnpm test                    # alias of `pnpm vitest run`
 ```
 
-All rows are runnable now; the `vitest` rows became runnable in Phase 8 (vitest 4 is a devDependency; 29 pure-logic tests, no component render tests per D12).
+All rows are runnable now; the `vitest` rows became runnable in Phase 8 (vitest 4 is a devDependency; 64 pure/static-logic tests, no component render tests per D12).
+
+Cargo dev/test profiles use `debug = "line-tables-only"` in `src-tauri/Cargo.toml` to retain source line information while limiting Windows PDB and `target/` growth. A verified clean dev start produced 2.169 GiB; the pre-D14 97-test baseline raised it to 2.448 GiB (2026-08-26). The current suite contains 148 Rust tests in the 2026-08-27 full run.
 
 Rust is installed on the reference machine: rustup 1.29.0 with `stable-x86_64-pc-windows-msvc` (rustc / cargo 1.98.0, verified 2026-08-25 in Phase 0). Node v24.18.0, pnpm 10.26.2, Git 2.48.1, and VS2022 with VC x86/x64 are present; full audit table in `PROJECT_STATUS.md`. Note: shells opened before the install may need `%USERPROFILE%\.cargo\bin` on PATH or a restart.
 
 ## Architecture (Big Picture)
 
-Windows-first local project indexer built with **React + TypeScript + Vite (frontend) over Tauri 2 IPC into Rust**. No local HTTP server, no database — persistence is two versioned JSON files in `%APPDATA%\windy-project-mgr\` (`projects.json`, `settings.json`), both written via temp-file-then-rename so failures never corrupt data.
+Windows-first local project indexer built with **React + TypeScript + Vite (frontend) over Tauri 2 IPC into Rust**. No local HTTP server, no database — persistence is two versioned JSON files in `<current executable directory>\data\` (`projects.json`, `settings.json`), both written via temp-file-then-rename so failures never corrupt data. There is no AppData fallback or automatic migration (D14).
 
 Cross-cutting decisions that shape implementation (full text in `docs/PLAN.MD` section 4):
 
@@ -142,10 +145,14 @@ Cross-cutting decisions that shape implementation (full text in `docs/PLAN.MD` s
 - **Git scanner shells out to system Git CLI**; it must never run `git fetch` (fully offline). Edge semantics: no upstream → ahead/behind = 0 and hidden in UI; empty repo → lastCommit = null; detached HEAD → branch = `detached@<shorthash>`; recentCommits capped at 10.
 - **Run/Build/Open-in-editor are detached launches**: prefer `wt.exe`, fall back to `powershell -NoExit`, cwd = project path. The app reports only launch success/failure — it never captures exit codes or output, so "Build failed" in acceptance tests means the launch action failed, not the command.
 - **Path dedup on add**: normalize to absolute path, compare case-insensitively (Windows semantics); duplicates are rejected with a message, never merged.
-- **Theming**: single global stylesheet, all colors/spacing via CSS variables, light/dark sets switched by root `data-theme` (`system` follows `prefers-color-scheme`; `light`/`dark` force a palette). Manual choice persists to `settings.json` (`theme` field); the app reads it on startup and applies it. Theme presets = future new variable sets, no mechanism change.
-- **Tauri command surface is intentionally minimal**: CRUD (5) + `scan_project` + `list_scripts` (added Phase 8: Add Dialog Step 2 needs script enumeration for unregistered paths, D5; justified in `src/commands/scan.rs`) + `open_project`/`run_project`/`build_project` + `get_settings`/`update_settings`/`open_in_editor` (last six registered in Phase 10; §2.5 surface now complete). Do not add Service/Controller/Repository layers unless code size proves the need. Current wiring: all 13 commands are registered (Phase 5/8/10); the template `greet` command was removed with the template UI; command handlers keep testable `*_in(data_dir)` cores so tests run against temp dirs instead of `%APPDATA%`. Frontend uses only React built-in hooks + a single CSS-variable stylesheet (ADR 0003); Dashboard↔Detail view switching is React state (`selectedId` in `App.tsx`, no router library); theme `data-theme` is applied from persisted `settings.theme` at startup and on save (SettingsDialog).
+- **Theming**: single global stylesheet, all colors/spacing via CSS variables, light/dark sets switched by root `data-theme` (`system` follows `prefers-color-scheme`; `light`/`dark` force a palette). Manual color mode, tagged accent selection and editor profile persist independently in v2 `settings.json` fields (`colorMode`, `accentColor`, `editor`); the app reads them on startup and applies the effective theme. Theme presets = future new variable sets, no mechanism change.
+- **Portable data + green release (D14)**: `app_data_dir()` resolves only `<current EXE directory>\data`; all command handlers retain testable `*_in(data_dir)` cores. Never add an AppData fallback or automatic migration. Dev data is therefore under `src-tauri\target\debug\data` and `cargo clean` deletes it. `build.bat` must remain the release entrypoint: it delegates to PowerShell 7, runs `pnpm tauri build --no-bundle`, and produces only `build\win-unpacked`, a versioned `release\` directory, and its ZIP—no MSI/NSIS.
+- **Tauri command surface is intentionally minimal**: CRUD (5) + `scan_project` + `list_scripts` (added Phase 8: Add Dialog Step 2 needs script enumeration for unregistered paths, D5; justified in `src/commands/scan.rs`) + `open_project`/`run_project`/`build_project` + `get_settings`/`update_settings`/`open_in_editor` + `detect_editors`/`get_windows_accent_color`/`get_app_info` (system commands added for settings v2; §2.5 surface now complete). Do not add Service/Controller/Repository layers unless code size proves the need. Current wiring: all 16 commands are registered (Phase 5/8/10 plus the three Task 2 system commands); the template `greet` command was removed with the template UI. Frontend uses only React built-in hooks + a single CSS-variable stylesheet (ADR 0003); Dashboard↔Detail view switching is React state (`selectedId` in `App.tsx`, no router library); theme `data-theme` and accent variables are applied from persisted v2 settings at startup and on save (SettingsDialog).
 
 ## Execution Protocol (Mandatory)
+
+- Current command-registration audit (2026-08-27): `src-tauri/src/lib.rs` registers 16 Tauri commands, including editor discovery, Windows accent, and app-info commands; Task 3 launcher fix3 and the Stage 9 custom-executable visibility fix are verified by focused and full tests.
+- Task 5 / Stage 6 strict re-review was closed by fix2 and `task-5-rereview2.md` (PASS). Stage 8 real-window acceptance and Stage 9 custom-executable regression evidence are recorded in `task-7-report.md` and `task-8-bugfix-report.md`; the user subsequently confirmed the remaining Phase 14 manual acceptance items passed.
 
 - `docs/PLAN.MD` section 0 contains the 34-task checkbox tracker. After a subtask is **completed and verified**, check its box and update the progress summary line (counts + date) in the same edit. Never pre-check unverified work; blocked tasks stay unchecked and get evidence logged in `PROJECT_STATUS.md` Blocked section.
 - Maintain `PROJECT_STATUS.md` (phase/status/tests/build/next-step) and `CHANGELOG.md` continuously; report each finished Phase in the structured format from primary document section 18.

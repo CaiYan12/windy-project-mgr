@@ -1,12 +1,12 @@
 # Windy Project Manager — 完整 MVP 执行计划
 
-> 本文档为自包含的最终执行计划：原始需求见根目录《Windy Project Manager - Primary Request&Plan Document.md》（下称"原始文档"），本文档已合并 2026-08-25 Grilling Session 确认的全部 13 项决策（D1~D13）。执行时以本文档为准；与原始文档冲突处以本文档（及原始文档第 29~31 节）为准。
+> 本文档为自包含的最终执行计划：原始需求见根目录《Windy Project Manager - Primary Request&Plan Document.md》（下称"原始文档"），本文档已合并 D1~D14。执行时以本文档为准；与原始文档冲突处以本文档及已接受 ADR 为准。
 
 ---
 
 ## 0. 执行进度追踪（Checkbox）
 
-> **执行进度：12 / 15 Phase 完成 · 29 / 34 子任务（最后更新：2026-08-25）**
+> **执行进度：15 / 15 Phase 完成 · 34 / 34 子任务（最后更新：2026-08-27；最终人工验收已完成，MVP 交付闭环）**
 
 ### Phase 0 环境审计
 
@@ -16,7 +16,7 @@
 ### Phase 1 项目规划
 
 - [x] `README.md` / `CONTEXT.md` / `CHANGELOG.md` 建立
-- [x] 3 份 ADR 落盘（`docs/adr/0001~0003`，D13）
+- [x] 基础 3 份 ADR 落盘（`docs/adr/0001~0003`，D13）及 Settings v2 ADR 0005
 - [x] `TESTING.md` 人工验收清单骨架建立
 
 ### Phase 2 工程初始化
@@ -66,26 +66,27 @@
 
 - [x] `open_project` / `run_project` / `build_project` 按 D4 语义（wt 优先 / PowerShell 回退，只报启动成败）
 - [x] `get_settings` / `update_settings` / `open_in_editor` 实现并测试（D6）
+  - Task 3 fix3 2026-08-27 已修复 batch 参数边界与 PowerShell 路径分离边界；安全契约和证据见 `.superpowers/sdd/2026-08-27-settings-overhaul/task-3-fix3-report.md`。
 
 ### Phase 11 UI Polish + 主题系统
 
 - [x] 亮 / 暗两套 CSS 变量集 + `data-theme` 切换 + 默认跟随系统（D1）
-- [x] 设置 Dialog：主题选择与编辑器配置（预设下拉 + 自定义）
+- [x] 设置 Dialog v2：Appearance / Editor / General 三分页、强调色预览、真实编辑器发现与 General 信息/重置界面；已完成 strict re-review 修复，并经真实 Tauri 窗口验收（证据见 `.superpowers/sdd/2026-08-27-settings-overhaul/task-5-rereview2.md`、`task-7-report.md`）
 - [x] 主题手动选择重启后保留（持久化到 `settings.json`）
 
 ### Phase 12 全链路集成测试
 
-- [ ] `TESTING.md` 人工验收清单逐项勾选通过（含脚本引导 / 编辑器打开 / 主题持久化 / 查重拒绝）
+- [x] `TESTING.md` 人工验收清单逐项勾选通过（含脚本引导 / 编辑器打开 / 主题持久化 / 查重拒绝）
 
 ### Phase 13 Production Build
 
-- [ ] Tauri bundle 构建成功；可执行文件与 bundle 体积实测记录
+- [x] `build.bat` 绿色 ZIP 构建成功；解压 EXE 启动、便携数据路径与产物体积实测记录
 
 ### Phase 14 最终测试与验收
 
-- [ ] Functional / Error Handling / UX / Stability / Production 全部通过（原始第 25 节）
-- [ ] 5 条增量验收项全部通过（本文档第 7 节）
-- [ ] 顶部“执行进度”更新为 15 / 15，MVP 宣布完成
+- [x] Functional / Error Handling / UX / Stability / Production 全部通过（原始第 25 节；最终人工验收由用户完成）
+- [x] 5 条增量验收项全部通过（本文档第 7 节；最终人工验收由用户完成）
+- [x] 顶部“执行进度”更新为 15 / 15，MVP 宣布完成
 
 ---
 
@@ -191,17 +192,20 @@ interface ActivityMetadata {
 
 ### 2.4 存储
 
-- `%APPDATA%\windy-project-mgr\projects.json`：`{ "version": 1, "projects": [] }`
-- `%APPDATA%\windy-project-mgr\settings.json`（D6）：`{ "version": 1, "editorCommand": "", "theme": "system" }`
+- `<EXE目录>\data\projects.json`：`{ "version": 1, "projects": [] }`
+- `<EXE目录>\data\settings.json`（D6 / D14）：v2 结构为 `{ "version": 2, "colorMode": "system", "accentColor": { "kind": "preset", "value": "windy-teal" }, "editor": { "executable": "", "arguments": ["{path}"] } }`；读取 v1 `{ "editorCommand", "theme" }` 时自动迁移
 - 共同要求：Schema Version、写临时文件再替换（写失败不破坏原文件）、损坏可诊断、删除项目记录不删除实际目录。
+- 不读取、不迁移、不删除旧 `%APPDATA%\windy-project-mgr`；所有运行形态统一使用 EXE 相邻 `data\`。开发数据位于 `target\debug\data\`，`cargo clean` 会将其删除。
 
 ### 2.5 Tauri Command 全集
 
 ```text
 get_projects / get_project / create_project / update_project / delete_project
 scan_project
+list_scripts
 open_project / run_project / build_project
 get_settings / update_settings / open_in_editor   ← D6 增量
+detect_editors / get_windows_accent_color / get_app_info ← Settings v2 增量
 ```
 
 ---
@@ -228,14 +232,16 @@ get_settings / update_settings / open_in_editor   ← D6 增量
 
 ---
 
-## 4. 已确认决策清单（D1~D13）
+## 4. 已确认决策清单（D1~D14）
 
 ### D1 主题系统
 
 - 全局单样式表 + CSS 变量（颜色/间距/圆角/状态色全走变量），零样式依赖
 - 亮 / 暗两套完整变量集，根节点 `data-theme` 属性切换；亮 / 暗 / 跟随系统 三选项
-- 默认跟随系统；手动选择持久化到 `settings.json`
-- 扩展点：主题预设 = 追加变量集 + 预设元数据；MVP 不实现预设与主题编辑
+- 默认跟随系统；颜色模式与强调色独立持久化到 v2 `settings.json` 的 `colorMode` / `accentColor`
+- 强调色支持六个预设、Windows 当前主题色与合法的 `#RRGGBB` 自定义值，并派生 accent / hover / soft / focus / on-accent 变量
+- Windows 当前主题色只在启动和设置弹窗打开时读取；读取失败时由前端回退 Windy teal 并提示
+- 扩展点：新增强调色预设不改变 `data-theme` 切换机制
 
 ### D2 扫描策略
 
@@ -264,10 +270,11 @@ get_settings / update_settings / open_in_editor   ← D6 增量
 
 ### D6 在编辑器中打开
 
-- `settings.json` 存 `editorCommand` 与 `theme`（D1）；编辑器用命令名识别，不做安装探测
-- 设置 Dialog：预设下拉（`code` / `code-insiders` / `cursor`）+ 自定义输入
+- `settings.json` 使用 v2 `editor` 配置：真实可执行文件路径与逐行 `arguments`；v1 `editorCommand` / `theme` 自动迁移
+- 设置 Dialog：Editor 分页调用真实发现，支持 VS Code、VS Code Insiders、Cursor、Windsurf、VSCodium、Zed 的实际路径，以及 Other `.exe` 文件选择
+- 参数必须恰好包含一个 `{path}`；`.exe` 直接启动，`.cmd` / `.bat` 通过 `cmd.exe /d /c` 启动，工作目录为项目目录
 - 入口：卡片 More 菜单 + Detail Actions；未配置显示 `Editor not configured` 并引导配置
-- 新增 Command：`get_settings` / `update_settings` / `open_in_editor`
+- 新增 Command：`get_settings` / `update_settings` / `open_in_editor` / `detect_editors` / `get_windows_accent_color` / `get_app_info`
 
 ### D7 Search
 
@@ -306,6 +313,13 @@ get_settings / update_settings / open_in_editor   ← D6 增量
 
 - `CONTEXT.md`（术语表）、`docs/adr/0001-scan-data-memory-only.md`、`docs/adr/0002-detached-run-build.md`、`docs/adr/0003-css-variable-theming.md`、`TESTING.md` 验收清单骨架
 
+### D14 绿色 ZIP 与完全便携数据
+
+- 所有运行形态把 `projects.json` / `settings.json` 写入当前 EXE 同目录 `data\`
+- 不设便携标记、不回退 AppData、不自动迁移旧数据
+- `build.bat` → `build.ps1` → `pnpm tauri build --no-bundle`，生成绿色目录与版本化 ZIP，不生成 MSI/NSIS
+- 开发数据位于 `target\debug\data\`，执行 `cargo clean` 会删除开发数据
+
 ---
 
 ## 5. 执行顺序（Phase 0~14 + 增量调整）
@@ -313,7 +327,7 @@ get_settings / update_settings / open_in_editor   ← D6 增量
 | Phase | 内容 | 增量调整（冲突时以本列为准） |
 |---|---|---|
 | 0 环境审计 | 检查 OS/Node/pnpm/Rust/Cargo/Tauri/Git/仓库状态，输出环境表，创建 `PROJECT_STATUS.md` | rustup 安装与验证（见 3.2） |
-| 1 项目规划 | `README.md` / `CONTEXT.md` / `CHANGELOG.md` | 追加 3 份 ADR、`TESTING.md` 骨架（D13） |
+| 1 项目规划 | `README.md` / `CONTEXT.md` / `CHANGELOG.md` | 追加基础 ADR、`TESTING.md` 骨架（D13）；Settings v2 规格 / 计划 / ADR 0005 |
 | 2 工程初始化 | create-tauri-app 骨架，验证 dev / production build | pnpm（D11）；`pnpm tauri dev` |
 | 3 基础目录 | `src/`（components/pages/lib/types）与 `src-tauri/src/`（commands/project/scanner/git） | 不变；结构服务于代码，可裁剪 |
 | 4 数据层 | Project Store + `projects.json`：Load/Save/Create/Update/Delete/Get；先写测试再实现 | 增加 `settings.json` 读写（D6），同机制 |
@@ -323,9 +337,9 @@ get_settings / update_settings / open_in_editor   ← D6 增量
 | 8 Dashboard UI | Sidebar + Toolbar + Search + Card Grid | 骨架先行 + 并发扫描填充（D2）；Sidebar（D9）；Search（D7）；卡片 More 含编辑器入口（D6）；两步 Add Dialog（D10）；删除确认 |
 | 9 Project Detail | Header/Overview/Tech/Git/Commits/Activity/Actions | Actions 增加编辑器入口（D6）；手动刷新（D2） |
 | 10 Run / Build / Open | `open_project` / `run_project` / `build_project` | 按 D4 语义；新增 `get_settings` / `update_settings` / `open_in_editor`（D6） |
-| 11 UI Polish | Spacing/Typography/Hover/Loading/Error/Empty State | 主题系统（D1）：双变量集、`data-theme`、持久化；设置 Dialog（主题 + 编辑器） |
+| 11 UI Polish | Spacing/Typography/Hover/Loading/Error/Empty State | 主题系统（D1）：双变量集、`data-theme`、六种预设 / Windows / 自定义强调色、持久化；Settings v2 三分页设置中心 |
 | 12 全链路集成测试 | 真实用户流程 + 异常路径（Git 缺失 / 路径不存在 / JSON 损坏 / Run 失败） | 人工验收清单覆盖：脚本引导、编辑器打开、主题持久化、查重拒绝 |
-| 13 Production Build | Tauri bundle；实测可执行文件与 bundle 体积 | 不变 |
+| 13 Production Build | 绿色 ZIP；实测 EXE 与 ZIP 体积 | `build.bat` 无安装器构建；解压启动 + EXE 相邻 `data\`（D14） |
 | 14 最终测试 | Functional / Error Handling / UX / Stability / Production | 不变 |
 
 开发节奏（原第 27 节）：Inspect → Plan → Implement → Test → Verify → Update Status → Next Phase；每个 Vertical Slice 独立提交（原第 19 节）；`PROJECT_STATUS.md` 持续维护（原第 17 节）。
@@ -337,7 +351,7 @@ get_settings / update_settings / open_in_editor   ← D6 增量
 | 层 | 方式 | 范围 |
 |---|---|---|
 | Rust 单元 + 集成 | `cargo test` 自动化 | Store / CRUD / Scanner / Git Scanner；临时目录 + 真实临时 git 仓库；覆盖文件不存在 / 空文件 / JSON 损坏 / 保存失败 / 重复 ID / 删除不存在项目 / 大小写与分隔符查重变体 |
-| 前端纯逻辑 | `vitest` 自动化 | 搜索过滤、路径查重规范化、卡片数据组装 |
+| 前端纯逻辑与静态契约 | `vitest` 自动化 | 搜索过滤、路径查重规范化、卡片数据组装、主题 / 设置校验、设置界面关键契约 |
 | UI 全链路 | `TESTING.md` 人工验收清单 | Phase 12 / 14 逐项勾选；不搭 WebDriver |
 
 测试失败处理：现象 → 证据 → 原因 → 修复 → 验证；不得将猜测称为 Root Cause。
@@ -354,14 +368,14 @@ get_settings / update_settings / open_in_editor   ← D6 增量
 - 操作：Open / Run / Build
 - UI：Dashboard / Card Grid / Search / Detail / Add/Edit
 - 稳定性：Persistence / Error Handling / Restart / Production Build
-- 体积：实测可执行文件与 bundle 大小，不得用估算值
+- 体积：实测绿色版可执行文件与 ZIP 大小，不得用估算值
 
-### 增量验收（2026-08-25 决策）
+### 增量验收（2026-08-27 更新）
 
 1. **主题**：亮 / 暗 / 跟随系统三种行为正确；用户手动选择重启后保留
 2. **查重**：重复添加同一路径（含大小写变体、末尾分隔符变体）被拒绝并有明确提示
 3. **脚本引导**：含启动脚本的目录，Add Dialog Step 2 正确列出候选并按 `start` > `run` > 字母序规则预选
-4. **编辑器入口**：`editorCommand` 已配置时，卡片 More 菜单与 Detail 均可拉起编辑器；未配置时显示 `Editor not configured` 并引导配置
+4. **编辑器入口**：Settings v2 的 Editor Profile 已配置时，卡片 More 菜单与 Detail 均可按 `{path}` 打开项目目录；未配置时显示 `Editor not configured` 并引导配置；Other 仅保证程序启动，不保证程序自身支持文件夹工作区
 5. **离线可用**：无网络环境下所有功能可用（无任何 `git fetch` / 网络依赖）
 
 ---
@@ -376,6 +390,7 @@ get_settings / update_settings / open_in_editor   ← D6 增量
 | ADR：扫描数据仅内存 | `docs/adr/0001-scan-data-memory-only.md` | Phase 1 |
 | ADR：Run/Build 分离启动 | `docs/adr/0002-detached-run-build.md` | Phase 1 |
 | ADR：CSS 变量主题 | `docs/adr/0003-css-variable-theming.md` | Phase 1 |
+| ADR：绿色 ZIP 与便携数据 | `docs/adr/0004-portable-data-and-zip.md` | 2026-08-26 |
 | 人工验收清单 | `TESTING.md` | Phase 1 |
 | 开发状态 | `PROJECT_STATUS.md` | Phase 0 起持续维护 |
 | 变更记录 | `CHANGELOG.md` | Phase 1 起持续维护 |

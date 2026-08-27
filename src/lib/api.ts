@@ -1,6 +1,4 @@
-// Tauri IPC 封装：与 §2.5 command 面对应；错误统一为字符串（后端约定）。
-// 六个操作 command 后端已于 Phase 10 实现（D4 / D6）；`get_settings` /
-// `update_settings` 前端封装于 Phase 11（D1 主题持久化 + D6 设置 Dialog）接入。
+// Tauri IPC wrappers and the settings v2 wire contract.
 
 import { invoke } from "@tauri-apps/api/core";
 import type {
@@ -10,10 +8,45 @@ import type {
   StartupScript,
 } from "../types/project";
 
-/** 应用设置（D6 settings.json）：编辑器命令 + 主题选择。 */
+export type ColorMode = "system" | "light" | "dark";
+
+export type AccentPresetId =
+  | "windy-teal"
+  | "ocean-blue"
+  | "violet"
+  | "amber"
+  | "coral"
+  | "rose";
+
+export type AccentColor =
+  | { kind: "preset"; value: AccentPresetId }
+  | { kind: "windows" }
+  | { kind: "custom"; value: string };
+
+export interface EditorProfile {
+  executable: string;
+  arguments: string[];
+}
+
+/** Settings v2 payload returned by and sent to the Rust settings commands. */
 export interface AppSettings {
-  editorCommand: string;
-  theme: string;
+  colorMode: ColorMode;
+  accentColor: AccentColor;
+  editor: EditorProfile;
+}
+
+export type DetectionSource = "path" | "registry" | "standard";
+
+export interface DetectedEditor {
+  id: string;
+  name: string;
+  executable: string;
+  source: DetectionSource;
+}
+
+export interface AppInfo {
+  version: string;
+  dataDir: string;
 }
 
 export function getProjects(): Promise<Project[]> {
@@ -62,4 +95,16 @@ export function getSettings(): Promise<AppSettings> {
 
 export function updateSettings(settings: AppSettings): Promise<AppSettings> {
   return invoke<AppSettings>("update_settings", { settings });
+}
+
+export function detectEditors(): Promise<DetectedEditor[]> {
+  return invoke<DetectedEditor[]>("detect_editors");
+}
+
+export function getWindowsAccentColor(): Promise<string> {
+  return invoke<string>("get_windows_accent_color");
+}
+
+export function getAppInfo(): Promise<AppInfo> {
+  return invoke<AppInfo>("get_app_info");
 }

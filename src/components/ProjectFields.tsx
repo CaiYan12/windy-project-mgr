@@ -1,4 +1,12 @@
 // Add / Edit Dialog 共享的字段表单（受控）。
+// Path 字段带「Browse…」按钮：触发 Windows 原生文件夹选择对话框
+//（复用 @tauri-apps/plugin-dialog，Step 2 文件选择同源；D10 路径选填体验）。
+// 最近一次浏览目录记入 localStorage，下次打开定位到该处。
+
+import { open as openDialog } from "@tauri-apps/plugin-dialog";
+
+/** localStorage 键：最近一次浏览的目录（供 Browse… 默认定位）。 */
+const LAST_BROWSE_KEY = "windy:last-browse-dir";
 
 export interface ProjectFormState {
   name: string;
@@ -27,16 +35,38 @@ export function ProjectFields({
   showCommands: boolean;
   nameAutoHint?: boolean;
 }) {
+  // 选择目录：对话框默认定位到上次浏览目录；选中后记住该目录。
+  // 取消返回 null 时不改动；失败等同取消（仍可手动输入）。
+  async function browsePath() {
+    try {
+      const dir = await openDialog({
+        directory: true,
+        defaultPath: localStorage.getItem(LAST_BROWSE_KEY) ?? undefined,
+      });
+      if (typeof dir === "string") {
+        localStorage.setItem(LAST_BROWSE_KEY, dir);
+        onChange({ path: dir });
+      }
+    } catch {
+      /* 选择器不可用或取消：保持原输入 */
+    }
+  }
+
   return (
     <div className="form-grid">
       <label className="field">
         <span className="field-label">Path</span>
-        <input
-          value={state.path}
-          onChange={(e) => onChange({ path: e.target.value })}
-          placeholder="d:\Dev\my-project"
-          autoFocus
-        />
+        <div className="field-row">
+          <input
+            value={state.path}
+            onChange={(e) => onChange({ path: e.target.value })}
+            placeholder="d:\Dev\my-project"
+            autoFocus
+          />
+          <button type="button" className="btn small" onClick={browsePath}>
+            Browse…
+          </button>
+        </div>
       </label>
 
       <label className="field">

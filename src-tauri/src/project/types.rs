@@ -27,13 +27,29 @@ pub struct Project {
 pub enum StoreError {
     Io(std::io::Error),
     /// 文件存在但为空或不是合法 JSON。
-    Corrupted { path: std::path::PathBuf, detail: String },
+    Corrupted {
+        path: std::path::PathBuf,
+        detail: String,
+    },
+    /// 输入或已解析的设置值不满足语义约束。
+    Validation {
+        detail: String,
+    },
     /// Schema 版本不匹配。
-    VersionMismatch { found: u32, expected: u32 },
-    NotFound { id: String },
-    DuplicateId { id: String },
+    VersionMismatch {
+        found: u32,
+        expected: u32,
+    },
+    NotFound {
+        id: String,
+    },
+    DuplicateId {
+        id: String,
+    },
     /// 路径查重命中（D3）：拒绝并引导编辑已有记录，不合并。
-    DuplicatePath { path: String },
+    DuplicatePath {
+        path: String,
+    },
 }
 
 impl fmt::Display for StoreError {
@@ -43,6 +59,7 @@ impl fmt::Display for StoreError {
             Self::Corrupted { path, detail } => {
                 write!(f, "corrupted data file {}: {detail}", path.display())
             }
+            Self::Validation { detail } => write!(f, "invalid settings: {detail}"),
             Self::VersionMismatch { found, expected } => {
                 write!(f, "unsupported data version {found} (expected {expected})")
             }

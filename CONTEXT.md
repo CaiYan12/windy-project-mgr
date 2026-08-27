@@ -38,12 +38,13 @@
 | Run Command / Build Command | 用户为项目配置的运行 / 构建命令。为空时对应按钮禁用并显示未配置文案。 |
 | 分离式启动（Detached Launch） | 在独立系统终端中启动命令；应用只报告启动动作的成功 / 失败，不采集命令退出码与输出（见 ADR 0002）。 |
 | Open | 在系统文件管理器中打开项目目录。 |
-| Editor Command（编辑器命令） | 用于"在编辑器中打开"的命令名（如 `code` / `cursor`），保存于设置中；不做安装探测。 |
+| Editor Profile（编辑器配置） | 用于“在编辑器中打开”的可执行文件路径与逐行参数；参数必须恰好包含一个 `{path}`，由启动层替换为项目目录。 |
 
 ## 查重与设置
 
 | 术语 | 定义 |
 |---|---|
 | 查重（Path Dedup） | 添加项目时对路径做规范化后比较；命中重复即拒绝创建，不合并（见 D3）。 |
-| Theme（主题） | 界面外观方案：亮 / 暗 / 跟随系统三选项；默认跟随系统，手动选择持久化。 |
-| Settings（设置） | 持久化的应用级配置，MVP 仅含 editorCommand 与 theme 两项。 |
+| Color Mode（颜色模式） | 界面明暗行为：亮 / 暗 / 跟随系统三选项；默认跟随系统，独立于强调色保存。 |
+| Accent Color（强调色） | Windy teal、五个其它预设、Windows 当前颜色或合法的 `#RRGGBB` 自定义颜色；用于派生全局 CSS 变量。 |
+| Settings（设置） | 版本化的应用级配置：`colorMode`、`accentColor` 与 `editor`；v1 的 `theme` / `editorCommand` 会自动迁移。 |

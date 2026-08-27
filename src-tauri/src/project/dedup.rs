@@ -9,7 +9,10 @@ use super::types::Project;
 /// 规范化路径：`/` 统一为 `\`，词法解析 `.` / `..`，相对路径以当前目录绝对化，
 /// 去除末尾分隔符；保留原始大小写。不访问文件系统。
 pub fn normalize_path(raw: &str) -> String {
-    let unified: String = raw.chars().map(|c| if c == '/' { '\\' } else { c }).collect();
+    let unified: String = raw
+        .chars()
+        .map(|c| if c == '/' { '\\' } else { c })
+        .collect();
     let absolute = make_absolute(&unified);
     let resolved = resolve_segments(&absolute);
     let trimmed = resolved.trim_end_matches('\\');

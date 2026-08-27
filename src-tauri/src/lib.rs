@@ -23,7 +23,10 @@ pub fn run() {
             commands::actions::open_project,
             commands::actions::run_project,
             commands::actions::build_project,
-            commands::actions::open_in_editor
+            commands::actions::open_in_editor,
+            commands::system::detect_editors,
+            commands::system::get_windows_accent_color,
+            commands::system::get_app_info
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -4,7 +4,7 @@
 // D6：Open in editor 等操作按钮经由 props 回调接入，本页不直接调用 IPC。
 
 import type { Project, ScanState } from "../types/project";
-import { activityText, gitLine, gitSyncLine, relativeTime, shortHash } from "../lib/cards";
+import { activityText, formatDateTime, gitLine, gitSyncLine, relativeTime, shortHash } from "../lib/cards";
 
 export function ProjectDetail({
   project,
@@ -81,7 +81,7 @@ export function ProjectDetail({
                 <dl className="detail-kv">
                   <div className="detail-kv-row">
                     <dt>Created</dt>
-                    <dd>{project.createdAt}</dd>
+                    <dd>{formatDateTime(project.createdAt)}</dd>
                   </div>
                   <div className="detail-kv-row">
                     <dt>Run command</dt>
@@ -207,7 +207,7 @@ export function ProjectDetail({
                   <button className="btn" onClick={onEdit}>
                     Edit
                   </button>
-                  <button className="btn btn-danger" onClick={onDelete}>
+                  <button className="btn btn-outline-danger" onClick={onDelete}>
                     Delete
                   </button>
                 </div>
