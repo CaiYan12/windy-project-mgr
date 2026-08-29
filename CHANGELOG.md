@@ -6,6 +6,15 @@ MVP 完成前无正式版本号，变更记于 `Unreleased`。
 
 ## Unreleased
 
+### 2026-08-30 — 结构级 UI 焕新（网易云语法）+ 主题工坊（settings v3）
+
+- **设计令牌重构**：新中性色板（亮 `#f5f6f8` 系 / 暗 `#121417` 系）、三档阴影（rest / hover / overlay）、动效令牌（120 / 180 / 280ms + `--ease-out` / `--ease-spring`）；侧栏落于 `--bg` 与内容区分层，卡片 / 面板落于 `--surface`；导航选中态改为实心 accent 胶囊 + `on-accent` 文字；全局 `--r-lg` 16px 对话框 + 背景 blur（reduced-motion 关闭）；toast 改为底部居中深色胶囊。
+- **封面式卡片（签名元素）**：`ProjectCard` 新增按项目类型着色的渐变封面条（`card-cover cover-<type>`，68px，大号类型字形），Detail 页新增 72px `detail-cover` 瓷贴呼应；详情页 hero 化（封面瓷贴 + 标题 + 操作行）。
+- **主题工坊（settings v3）**：`appearance` 域新增风格预设包（windy / cloud / ink / midnight，完整 token 组合含推荐强调色与中性色）、圆角 0–20px、字号 13–16px、密度 compact / comfortable、正文字体（8 个预设栈下拉 + 自定义栈输入 + `sanitizeFontFamily` 清洗）、中性色物化保存；「Save as custom theme」解除预设归属，「Reset appearance」回 Windy 默认；设置实时预览捕获 / 还原扩展为 accent 5 项 + appearance 10 项。前端纯逻辑 `src/lib/appearance.ts`（预设 / 校验 / 变量派生，14 个 vitest）；Rust `project/settings.rs` 版本化 v1→v3、v2→v3 迁移 + `validate` + 5 个新测试（未新增 Tauri 命令）。
+- **自绘滚动条**：全部滚动容器统一细胶囊样式（`scrollbar-width: thin` + `::-webkit-scrollbar*`），`--sb-thumb` 由 `--muted` 经 `color-mix` 派生，亮 / 暗与 settings v3 中性色覆盖下自动适配（用户新增要求）。
+- **验收中发现并修复的三个缺陷**：① `.card-grid` 自动行在获得确定高度的容器下被均分压缩（卡片描述 / 技术栈 / Git 行 / 操作区被 `overflow:hidden` 裁掉）→ `grid-auto-rows: max-content`；② `.card-actions` 悬停隐藏但保留布局空间，卡片底部出现大片死白且藏起主操作 → 改为常显（交互流程与 Phase 15 基线一致）；③ `.card-body` 未伸展导致同行矮卡操作行不贴底 → `flex: 1 1 auto`（同行操作行底对齐）。
+- **验证**：`pnpm test` 8 个文件 / 87 个测试通过、`cargo test` 155 / 155 通过（含 v3 迁移）、`pnpm build` 通过；静态预览（Tauri IPC mock 注入）在 320 / 768 / 1024 / 1440 亮暗两主题零水平溢出，Dashboard / Detail / Settings 三分页 / 暗色对比 / CJK 长名称换行 / 无 Git / detached / unknown 降级态复核通过；自绘滚动条亮暗双验。沿用 Phase 15 口径：几何验收基于静态 Vite 预览，未跑真实 Tauri 拖拽缩放。
+
 ### 2026-08-28 — Git 扫描控制台窗口回归修复
 
 - **根因**：添加项目后，`scan_project` 对 Git 仓库串行调用系统 Git CLI；Git 模块的 `Command::output()` 未设置 Windows `CREATE_NO_WINDOW`，因此绿色 EXE 会在扫描阶段闪现控制台窗口。

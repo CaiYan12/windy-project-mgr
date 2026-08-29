@@ -4,6 +4,11 @@ import type {
   ColorMode,
   EditorProfile,
 } from "./api";
+import {
+  APPEARANCE_VARIABLE_NAMES,
+  deriveAppearanceVariables,
+  type AppearanceSettings,
+} from "./appearance";
 
 export type { AccentColor, AccentPresetId, ColorMode, EditorProfile } from "./api";
 
@@ -49,7 +54,18 @@ const ACCENT_VARIABLE_NAMES = [
   "--accent-soft",
   "--focus",
   "--on-accent",
+  "--accent-ink",
 ] as const;
+
+/** 主题预览需要捕获/还原的全部变量：accent 五项 + appearance 十项。 */
+const THEME_VARIABLE_NAMES = [
+  ...ACCENT_VARIABLE_NAMES,
+  ...APPEARANCE_VARIABLE_NAMES,
+] as const;
+
+export type ThemeVariableName =
+  | (typeof ACCENT_VARIABLE_NAMES)[number]
+  | (typeof APPEARANCE_VARIABLE_NAMES)[number];
 
 export type AccentCssVariables = Record<(typeof ACCENT_VARIABLE_NAMES)[number], string>;
 export type EffectiveColorMode = Exclude<ColorMode, "system">;
@@ -58,7 +74,7 @@ export const PREFERS_DARK_QUERY = "(prefers-color-scheme: dark)";
 
 export interface ThemeState {
   readonly colorMode: string | null;
-  readonly variables: Readonly<Record<(typeof ACCENT_VARIABLE_NAMES)[number], string | null>>;
+  readonly variables: Readonly<Record<ThemeVariableName, string | null>>;
 }
 
 export function isValidColorMode(value: string): value is ColorMode {
@@ -166,39 +182,58 @@ export function deriveAccentVariables(
     "--accent-soft": rgbToHex(mixRgb(rgb, darkMode ? [0, 0, 0] : [255, 255, 255], darkMode ? 0.65 : 0.88)),
     "--focus": resolved,
     "--on-accent": readableAccentText(rgb),
+    // 强调色文字（用于中性面 / accent-soft 上的可读文本）：向 ink 方向混合，
+    // 保证任意自定义强调色都满足 WCAG AA（亮色向 #111827、暗色向 #E8EAEE 收敛）。
+    "--accent-ink": rgbToHex(mixRgb(rgb, darkMode ? [232, 234, 238] : [17, 24, 39], 0.25)),
   };
 }
 
-/** Apply only the theme attribute and, when selected, the explicit accent variables. */
+/** Apply the theme attribute, the explicit accent variables and, when provided, appearance variables. */
 export function applyTheme(
   root: HTMLElement,
   colorMode: ColorMode,
   accent?: AccentColor | string,
   windowsAccentColor?: string | null,
   prefersDark?: boolean,
+  appearance?: AppearanceSettings,
 ): void {
   root.setAttribute("data-theme", colorMode);
-  if (accent === undefined || !root.style) {
+  if (!root.style) {
     return;
   }
 
-  const variables = deriveAccentVariables(
-    resolveAccentColor(accent, windowsAccentColor),
-    colorMode,
-    prefersDark ?? prefersDarkColorScheme(root),
-  );
-  for (const name of ACCENT_VARIABLE_NAMES) {
-    root.style.setProperty(name, variables[name]);
+  if (accent !== undefined) {
+    const variables = deriveAccentVariables(
+      resolveAccentColor(accent, windowsAccentColor),
+      colorMode,
+      prefersDark ?? prefersDarkColorScheme(root),
+    );
+    for (const name of ACCENT_VARIABLE_NAMES) {
+      root.style.setProperty(name, variables[name]);
+    }
+  }
+
+  if (appearance) {
+    const variables = deriveAppearanceVariables(
+      appearance,
+      resolveEffectiveColorMode(colorMode, prefersDark ?? prefersDarkColorScheme(root)),
+    );
+    for (const name of APPEARANCE_VARIABLE_NAMES) {
+      const value = variables[name];
+      if (value === "") {
+        // 空栈 = 交还样式表默认（例如未自定义正文字体时）
+        root.style.removeProperty(name);
+      } else {
+        root.style.setProperty(name, value);
+      }
+    }
   }
 }
 
 /** Capture the exact values touched by applyTheme so a draft preview is reversible. */
 export function captureThemeState(root: HTMLElement): ThemeState {
-  const variables = {} as Record<
-    (typeof ACCENT_VARIABLE_NAMES)[number],
-    string | null
-  >;
-  for (const name of ACCENT_VARIABLE_NAMES) {
+  const variables = {} as Record<ThemeVariableName, string | null>;
+  for (const name of THEME_VARIABLE_NAMES) {
     const value = root.style?.getPropertyValue(name) ?? "";
     variables[name] = value === "" ? null : value;
   }
@@ -216,7 +251,7 @@ export function restoreThemeState(root: HTMLElement, state: ThemeState): void {
     root.setAttribute("data-theme", state.colorMode);
   }
 
-  for (const name of ACCENT_VARIABLE_NAMES) {
+  for (const name of THEME_VARIABLE_NAMES) {
     const value = state.variables[name];
     if (value === null) {
       root.style?.removeProperty(name);
@@ -232,9 +267,10 @@ export function previewTheme(
   colorMode: ColorMode,
   accent?: AccentColor | string,
   windowsAccentColor?: string | null,
+  appearance?: AppearanceSettings,
 ): ThemeState {
   const previous = captureThemeState(root);
-  applyTheme(root, colorMode, accent, windowsAccentColor);
+  applyTheme(root, colorMode, accent, windowsAccentColor, undefined, appearance);
   return previous;
 }
 

@@ -36,10 +36,12 @@ export type IconName =
   | "rotate-ccw"
   | "chevron-left"
   | "chevron-right"
+  | "chevron-down"
   | "text"
   | "align-left"
   | "terminal"
-  | "folder-plus";
+  | "folder-plus"
+  | "package";
 
 export const ICON_NAMES: ReadonlyArray<IconName> = [
   "windy",
@@ -77,10 +79,12 @@ export const ICON_NAMES: ReadonlyArray<IconName> = [
   "rotate-ccw",
   "chevron-left",
   "chevron-right",
+  "chevron-down",
   "text",
   "align-left",
   "terminal",
   "folder-plus",
+  "package",
 ];
 
 export interface IconProps extends Omit<SVGProps<SVGSVGElement>, "children"> {
@@ -225,6 +229,8 @@ function renderIcon(name: IconName): ReactNode {
       return <path d="m14.5 5.75-6.25 6.25 6.25 6.25" />;
     case "chevron-right":
       return <path d="m9.5 5.75 6.25 6.25-6.25 6.25" />;
+    case "chevron-down":
+      return <path d="m5.75 9.5 6.25 6.25 6.25-6.25" />;
     case "text":
       return <><path d="M5 5h14 M12 5v14 M8.5 19h7" /></>;
     case "align-left":
@@ -233,5 +239,7 @@ function renderIcon(name: IconName): ReactNode {
       return <><path d="m5 7 4.5 5L5 17" /><path d="M12.5 17H19" /></>;
     case "folder-plus":
       return <><path d="M3.5 7.75A1.75 1.75 0 0 1 5.25 6h4l2 2h7.5a1.75 1.75 0 0 1 1.75 1.75v7.5A1.75 1.75 0 0 1 18.75 19H5.25a1.75 1.75 0 0 1-1.75-1.75V7.75Z" /><path d="M12 11v5 M9.5 13.5h5" /></>;
+    case "package":
+      return <><path d="M12 3.25 20.25 7.5v9L12 20.75 3.75 16.5v-9L12 3.25Z" /><path d="M3.75 7.5 12 11.75l8.25-4.25" /><path d="M12 11.75v9" /></>;
   }
 }

@@ -1,6 +1,7 @@
-// Tauri IPC wrappers and the settings v2 wire contract.
+// Tauri IPC wrappers and the settings v3 wire contract.
 
 import { invoke } from "@tauri-apps/api/core";
+import type { AppearanceSettings } from "./appearance";
 import type {
   CreateProjectInput,
   Project,
@@ -28,10 +29,11 @@ export interface EditorProfile {
   arguments: string[];
 }
 
-/** Settings v2 payload returned by and sent to the Rust settings commands. */
+/** Settings v3 payload returned by and sent to the Rust settings commands. */
 export interface AppSettings {
   colorMode: ColorMode;
   accentColor: AccentColor;
+  appearance: AppearanceSettings;
   editor: EditorProfile;
 }
 

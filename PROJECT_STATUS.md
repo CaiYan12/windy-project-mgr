@@ -1,12 +1,13 @@
 # Windy Project Manager Development Status
 
 Current Phase:
-Phase 15 — 自绘 SVG 图标系统与全页面 UI 审计已完成；2026-08-28 图标细节与 Git 扫描窗口回归修复构建完成
+Phase 16（post-MVP）— 2026-08-30 结构级 UI 焕新（网易云语法）+ 主题工坊（settings v3）+ 自绘滚动条完成并验收
 
 Status:
-PASS — Phase 0~15 全部完成；Settings v2、绿色 ZIP、图标系统、图标细节与 Git 扫描窗口回归修复均已验证
+PASS — Phase 0~15 全部完成；2026-08-30 UI 焕新 + settings v3 主题工坊已通过 vitest 87 / cargo 155 / build / 四档宽度亮暗视觉验收
 
 Completed:
+- 2026-08-30 结构级 UI 焕新 + 主题工坊：设计令牌重构（新中性色板 / 三档阴影 / 动效令牌 120-180-280ms）、胶囊选中态侧栏、封面式卡片头 + Detail 瓷贴、详情页 hero 化、16px 对话框 + 背景 blur、底部居中深色 toast；settings v3 `appearance` 域（风格预设包 windy/cloud/ink/midnight、圆角 0-20、字号 13-16、密度、正文字体栈、另存自定义主题）经 `src/lib/appearance.ts`（14 vitest）与 Rust v1/v2→v3 迁移（5 新测试，未新增命令）落地；新增自绘滚动条（`--sb-thumb` 由 `--muted` 派生，亮暗自动适配，用户要求）。验收修复三缺陷：卡片网格行塌缩（`grid-auto-rows: max-content`）、操作区悬停藏起致死白（改常显）、同行卡片操作行不贴底（`.card-body` flex 伸展）。验证：vitest 8 文件 87 测试、cargo 155/155、`pnpm build` 通过；静态预览（IPC mock）320/768/1024/1440 亮暗零溢出，Dashboard/Detail/Settings/CJK 换行/降级态复核。
 - 2026-08-28 Git 扫描窗口回归修复：定位 `scan_project` 在 Git 仓库中串行调用 6 次系统 Git CLI 时未设置 `CREATE_NO_WINDOW`，导致绿色 EXE 添加项目后闪现控制台窗口；新增 Windows 子进程契约测试并完成红→绿。真实绿色 EXE 通过 `D:\Dev\opia-rss-reader` Add Project 与 Detail Refresh，Add 后卡片在 266.9ms 出现且所有观测 Git 子进程均为 `hwnd=0`，Refresh 返回 40.0ms 且 3 秒 UIA 监控无新增顶层窗口；验证数据已清理。
 - 2026-08-28 图标细节修复：Card / Detail 动作按钮统一 16px 图标盒、固定行高与上下居中；将 hammer 替换为用户指定的 1024×1024 填充 path，按 `scale(0.0234375)` 归一到 24×24，并使用 `currentColor` / `stroke="none"`。按用户要求未启动实机；`build.bat` 与随后静态 `pnpm test`（7 个文件 / 69 个测试）均通过；产物为 `build\\win-unpacked\\windy-project-mgr.exe`（9,881,088 bytes）。
 - 2026-08-27 Phase 15 图标系统与 UI 审计：新增零依赖自绘 `src/components/Icon.tsx` 与 `src/lib/iconUi.test.ts`，接入全页面语义图标；完成主题 / 强调色、Git 状态形状 + 颜色、焦点命中区、长文本收缩和 reduced-motion 契约复核。静态 Vite 页面在 320 / 768 / 1024 / 1440 下无水平溢出；真实 Tauri 默认窗口完成 Dashboard、More、Add/Edit/Confirm、Detail、Settings、Toast/错误路径复核。响应式数值尺寸未冒充原生 Tauri 拖拽缩放结果。
@@ -37,7 +38,7 @@ Blocked:
 - None
 
 Tests:
-- Passed: cargo 150/150（2026-08-28 full run；含 Git 扫描 Windows 子进程隐藏回归断言、Windows 系统子进程隐藏回归断言、actions_commands 6、launch 38、settings 15、system_commands 17）；vitest 69/69（含 Settings UI 与 Phase 15 图标纯逻辑/静态契约回归，2026-08-28）
+- Passed: cargo 155/155（2026-08-30 full run；150 基线 + settings v3 迁移 / appearance 校验 5 个新测试）；vitest 87/87（8 个文件；69 基线 + `src/lib/appearance.ts` 14 个 + theme/cards/api/icon 扩展断言，2026-08-30）
 - Failed: 0
 - Not Run: 0
 

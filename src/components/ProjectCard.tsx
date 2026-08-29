@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import type { Project, ScanState } from "../types/project";
-import { activityText, gitLine, gitSyncLine } from "../lib/cards";
+import { activityText, coverKindFor, gitLine, gitSyncLine, type CoverKind } from "../lib/cards";
 import { Icon, type IconName } from "./Icon";
 
 const GIT_STATUS_ICONS: Record<"clean" | "modified" | "unknown", IconName> = {
@@ -12,13 +12,27 @@ const GIT_STATUS_ICONS: Record<"clean" | "modified" | "unknown", IconName> = {
   unknown: "help-circle",
 };
 
+/** 封面字形：与 coverKindFor 的着色 kind 一一对应（大号类型字形内嵌封面条）。
+ *  详情页 hero 瓷贴复用同一映射。 */
+export const COVER_ICONS: Record<CoverKind, IconName> = {
+  node: "package",
+  python: "file-script",
+  rust: "layers",
+  java: "zap",
+  csharp: "layout-grid",
+  unknown: "overview",
+};
+
 export function ProjectCardSkeleton() {
   return (
     <div className="card scanning" aria-busy="true">
-      <div className="skel skel-title" />
-      <div className="skel skel-line" />
-      <div className="skel skel-line short" />
-      <div className="skel skel-footer" />
+      <div className="skel skel-cover" />
+      <div className="card-body">
+        <div className="skel skel-title" />
+        <div className="skel skel-line" />
+        <div className="skel skel-line short" />
+        <div className="skel skel-footer" />
+      </div>
     </div>
   );
 }
@@ -55,10 +69,17 @@ export function ProjectCard({
   const now = Date.now();
   const meta = scan.status === "ok" ? scan.data : null;
   const syncLine = meta?.git ? gitSyncLine(meta.git) : null;
+  const coverKind = coverKindFor(meta?.projectType ?? null);
 
   return (
     <article className="card clickable" onClick={onSelect}>
-      <header className="card-header">
+      <div className={`card-cover cover-${coverKind}`} aria-hidden="true">
+        <span className="card-cover-icon">
+          <Icon name={COVER_ICONS[coverKind]} size={30} />
+        </span>
+      </div>
+      <div className="card-body">
+        <header className="card-header">
           <div className="card-title">
           <h3>
             <button
@@ -235,6 +256,7 @@ export function ProjectCard({
           <span>Build</span>
         </button>
       </footer>
+      </div>
     </article>
   );
 }

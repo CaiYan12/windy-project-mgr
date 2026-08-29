@@ -36,6 +36,27 @@ export function shortHash(hash: string): string {
   return hash.slice(0, 7);
 }
 
+/** 卡片封面签名按项目类型着色；kind 同时是 CSS 类名（`.cover-<kind>`）。 */
+export type CoverKind = "node" | "python" | "rust" | "java" | "csharp" | "unknown";
+
+/** projectType（scanner 输出：Node/Python/Rust/Java/C#/null）→ 封面着色 kind。 */
+export function coverKindFor(projectType: string | null): CoverKind {
+  switch ((projectType ?? "").toLowerCase()) {
+    case "node":
+      return "node";
+    case "python":
+      return "python";
+    case "rust":
+      return "rust";
+    case "java":
+      return "java";
+    case "c#":
+      return "csharp";
+    default:
+      return "unknown";
+  }
+}
+
 /** ISO 时刻相对化：<60s just now、<60m Nm ago、<24h Nh ago、<=30d Nd ago，否则日期。 */
 export function relativeTime(iso: string, now: number): string {
   const t = Date.parse(iso);

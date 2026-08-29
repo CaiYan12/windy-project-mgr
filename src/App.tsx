@@ -34,6 +34,7 @@ import {
   type ThemeState,
 } from "./lib/theme";
 import { createRequestGeneration } from "./lib/settingsUi";
+import { DEFAULT_APPEARANCE, type AppearanceSettings } from "./lib/appearance";
 import type { Project, ScanState } from "./types/project";
 import "./App.css";
 
@@ -48,11 +49,13 @@ type SettingsPreview = {
   colorMode: AppSettings["colorMode"];
   accentColor: AppSettings["accentColor"];
   windowsAccentColor: string | null;
+  appearance: AppearanceSettings;
 };
 
 const DEFAULT_SETTINGS: AppSettings = {
   colorMode: "system",
   accentColor: { kind: "preset", value: "windy-teal" },
+  appearance: DEFAULT_APPEARANCE,
   editor: { executable: "", arguments: ["{path}"] },
 };
 
@@ -86,6 +89,13 @@ function App() {
       setSettings({
         colorMode: DEFAULT_SETTINGS.colorMode,
         accentColor: { ...DEFAULT_SETTINGS.accentColor },
+        appearance: {
+          ...DEFAULT_APPEARANCE,
+          neutrals: {
+            light: { ...DEFAULT_APPEARANCE.neutrals.light },
+            dark: { ...DEFAULT_APPEARANCE.neutrals.dark },
+          },
+        },
         editor: { ...DEFAULT_SETTINGS.editor, arguments: [...DEFAULT_SETTINGS.editor.arguments] },
       });
       setSettingsError(`Could not load settings: ${String(error)}`);
@@ -138,6 +148,7 @@ function App() {
         settingsPreview.accentColor,
         settingsPreview.windowsAccentColor,
         prefersDark,
+        settingsPreview.appearance,
       );
       return;
     }
@@ -149,6 +160,7 @@ function App() {
       activeSettings.accentColor,
       windowsAccentColor,
       prefersDark,
+      activeSettings.appearance ?? DEFAULT_APPEARANCE,
     );
   }, [settings, settingsPreview, settingsPreviewState, windowsAccentColor, prefersDark]);
 
@@ -253,9 +265,14 @@ function App() {
   }
 
   const previewSettingsTheme = useCallback(
-    (colorMode: AppSettings["colorMode"], accentColor: AppSettings["accentColor"], windowsColor: string | null) => {
-      setSettingsPreview({ colorMode, accentColor, windowsAccentColor: windowsColor });
-      previewTheme(document.documentElement, colorMode, accentColor, windowsColor);
+    (
+      colorMode: AppSettings["colorMode"],
+      accentColor: AppSettings["accentColor"],
+      windowsColor: string | null,
+      appearance: AppearanceSettings,
+    ) => {
+      setSettingsPreview({ colorMode, accentColor, windowsAccentColor: windowsColor, appearance });
+      previewTheme(document.documentElement, colorMode, accentColor, windowsColor, appearance);
     },
     [],
   );
@@ -324,23 +341,29 @@ function App() {
                 <p>Nothing matches your search.</p>
               </div>
             ) : (
-              <div className="card-grid">
-                {visible.map((p) => (
-                  <ProjectCard
-                    key={p.id}
-                    project={p}
-                    scan={scans[p.id]}
-                    onSelect={() => setSelectedId(p.id)}
-                    onOpen={() => guarded(() => openProject(p.path))}
-                    onRun={() => guarded(() => runProject(p.path, p.runCommand ?? ""))}
-                    onBuild={() => guarded(() => buildProject(p.path, p.buildCommand ?? ""))}
-                    onOpenInEditor={() => guarded(() => openInEditor(p.path))}
-                    onEdit={() => setDialog({ kind: "edit", project: p })}
-                    onDelete={() => setDialog({ kind: "delete", project: p })}
-                    onRescan={() => scanOne(p)}
-                  />
-                ))}
-              </div>
+              <>
+                <div className="grid-heading">
+                  <h2>{activeTag ?? "All projects"}</h2>
+                  <span className="grid-count">{visible.length}</span>
+                </div>
+                <div className="card-grid">
+                  {visible.map((p) => (
+                    <ProjectCard
+                      key={p.id}
+                      project={p}
+                      scan={scans[p.id]}
+                      onSelect={() => setSelectedId(p.id)}
+                      onOpen={() => guarded(() => openProject(p.path))}
+                      onRun={() => guarded(() => runProject(p.path, p.runCommand ?? ""))}
+                      onBuild={() => guarded(() => buildProject(p.path, p.buildCommand ?? ""))}
+                      onOpenInEditor={() => guarded(() => openInEditor(p.path))}
+                      onEdit={() => setDialog({ kind: "edit", project: p })}
+                      onDelete={() => setDialog({ kind: "delete", project: p })}
+                      onRescan={() => scanOne(p)}
+                    />
+                  ))}
+                </div>
+              </>
             )}
           </>
         )}

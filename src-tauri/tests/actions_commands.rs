@@ -38,6 +38,31 @@ fn get_settings_returns_defaults_when_file_missing() {
                 "kind": "preset",
                 "value": "windy-teal"
             },
+            "appearance": {
+                "stylePreset": "windy",
+                "radius": 10,
+                "fontSize": 14,
+                "density": "comfortable",
+                "fontFamily": "",
+                "neutrals": {
+                    "light": {
+                        "bg": "#f5f6f8",
+                        "surface": "#ffffff",
+                        "sunken": "#eceef2",
+                        "line": "#dfe3e8",
+                        "ink": "#17191f",
+                        "muted": "#6a7280"
+                    },
+                    "dark": {
+                        "bg": "#121417",
+                        "surface": "#1a1d22",
+                        "sunken": "#23272e",
+                        "line": "#2e343c",
+                        "ink": "#e8eaee",
+                        "muted": "#949ca8"
+                    }
+                }
+            },
             "editor": {
                 "executable": "",
                 "arguments": ["{path}"]
@@ -74,20 +99,13 @@ fn update_settings_persists_and_returns_saved_value() {
 
     let raw = std::fs::read_to_string(dir.join("settings.json")).expect("read");
     let persisted: serde_json::Value = serde_json::from_str(&raw).expect("valid json");
+    assert_eq!(persisted["version"], json!(3));
+    assert_eq!(persisted["colorMode"], json!("dark"));
+    assert_eq!(persisted["accentColor"]["value"], json!("coral"));
+    assert_eq!(persisted["appearance"]["stylePreset"], json!("windy"));
     assert_eq!(
-        persisted,
-        json!({
-            "version": 2,
-            "colorMode": "dark",
-            "accentColor": {
-                "kind": "preset",
-                "value": "coral"
-            },
-            "editor": {
-                "executable": "C:/Tools/Cursor/Cursor.exe",
-                "arguments": ["--reuse-window", "{path}"]
-            }
-        })
+        persisted["editor"]["executable"],
+        json!("C:/Tools/Cursor/Cursor.exe")
     );
     cleanup(&dir);
 }

@@ -47,10 +47,12 @@ const iconNames = [
   "rotate-ccw",
   "chevron-left",
   "chevron-right",
+  "chevron-down",
   "text",
   "align-left",
   "terminal",
   "folder-plus",
+  "package",
 ] as const;
 
 describe("custom SVG icon contract", () => {
@@ -119,6 +121,7 @@ describe("icon layout contract", () => {
     expect(css).toContain(".status-icon.clean");
     expect(css).toContain(".status-icon.modified");
     expect(css).toContain(".status-icon.unknown");
+    expect(css).toContain(".card-cover-icon");
     expect(css).toContain("@media (prefers-reduced-motion: reduce)");
   });
 

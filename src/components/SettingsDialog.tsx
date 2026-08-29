@@ -29,6 +29,13 @@ import {
   createRequestGeneration,
   isSettingsCloseBlocked,
 } from "../lib/settingsUi";
+import {
+  DEFAULT_APPEARANCE,
+  materializePreset,
+  parseAppearance,
+  type AppearanceSettings,
+  type StylePreset,
+} from "../lib/appearance";
 
 type SettingsTab = "appearance" | "editor" | "general";
 
@@ -41,6 +48,7 @@ const TABS: ReadonlyArray<{ id: SettingsTab; label: string; icon: IconName }> = 
 const DEFAULT_SETTINGS: AppSettings = {
   colorMode: "system",
   accentColor: DEFAULT_ACCENT_COLOR,
+  appearance: DEFAULT_APPEARANCE,
   editor: {
     executable: "",
     arguments: [...DEFAULT_EDITOR_ARGUMENTS],
@@ -59,6 +67,7 @@ interface SettingsDialogProps {
     colorMode: ColorMode,
     accentColor: AccentColor,
     windowsAccentColor: string | null,
+    appearance: AppearanceSettings,
   ) => void;
   onThemeRestore: () => void;
   onRetrySettings: () => void;
@@ -79,6 +88,7 @@ export function SettingsDialog({
   const [activeTab, setActiveTab] = useState<SettingsTab>("appearance");
   const [colorMode, setColorMode] = useState<ColorMode>("system");
   const [accentColor, setAccentColor] = useState<AccentColor>(DEFAULT_ACCENT_COLOR);
+  const [appearance, setAppearance] = useState<AppearanceSettings>(DEFAULT_APPEARANCE);
   const [customAccentValue, setCustomAccentValue] = useState("#0E7D8C");
   const [editorProfile, setEditorProfile] = useState<EditorProfile>({
     executable: "",
@@ -108,7 +118,7 @@ export function SettingsDialog({
   >(null);
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const editorsLoadedRef = useRef(false);
-  const draftRef = useRef({ colorMode, accentColor });
+  const draftRef = useRef({ colorMode, accentColor, appearance });
   const draftDirtyRef = useRef(false);
   const windowsAccentRequestGeneration = useRef(createRequestGeneration());
   const editorRequestGeneration = useRef(createRequestGeneration());
@@ -125,8 +135,8 @@ export function SettingsDialog({
   }, []);
 
   useEffect(() => {
-    draftRef.current = { colorMode, accentColor };
-  }, [colorMode, accentColor]);
+    draftRef.current = { colorMode, accentColor, appearance };
+  }, [colorMode, accentColor, appearance]);
 
   useEffect(() => {
     if (!settings) {
@@ -137,6 +147,7 @@ export function SettingsDialog({
     }
     setColorMode(isValidTheme(settings.colorMode) ? settings.colorMode : "system");
     setAccentColor(settings.accentColor);
+    setAppearance(parseAppearance(settings.appearance) ?? DEFAULT_APPEARANCE);
     setCustomAccentValue(
       settings.accentColor.kind === "custom" ? settings.accentColor.value : "#0E7D8C",
     );
@@ -162,7 +173,7 @@ export function SettingsDialog({
       setWindowsAccentError(null);
       onWindowsAccentResult(value, null);
       if (draftRef.current.accentColor.kind === "windows") {
-        onThemePreview(draftRef.current.colorMode, draftRef.current.accentColor, value);
+        onThemePreview(draftRef.current.colorMode, draftRef.current.accentColor, value, draftRef.current.appearance);
       }
     } catch (error) {
       if (!windowsAccentRequestGeneration.current.isCurrent(request)) {
@@ -172,7 +183,7 @@ export function SettingsDialog({
       setWindowsAccentError(String(error));
       onWindowsAccentResult(null, String(error));
       if (draftRef.current.accentColor.kind === "windows") {
-        onThemePreview(draftRef.current.colorMode, draftRef.current.accentColor, null);
+        onThemePreview(draftRef.current.colorMode, draftRef.current.accentColor, null, draftRef.current.appearance);
       }
     } finally {
       if (windowsAccentRequestGeneration.current.isCurrent(request)) {
@@ -276,13 +287,14 @@ export function SettingsDialog({
   function preview(
     colorModeValue: ColorMode,
     accentColorValue: AccentColor,
-    windowsColor = windowsAccentColor,
+    appearanceValue: AppearanceSettings = appearance,
   ) {
     draftDirtyRef.current = true;
-    draftRef.current = { colorMode: colorModeValue, accentColor: accentColorValue };
+    draftRef.current = { colorMode: colorModeValue, accentColor: accentColorValue, appearance: appearanceValue };
     setColorMode(colorModeValue);
     setAccentColor(accentColorValue);
-    onThemePreview(colorModeValue, accentColorValue, windowsColor);
+    setAppearance(appearanceValue);
+    onThemePreview(colorModeValue, accentColorValue, windowsAccentColor, appearanceValue);
   }
 
   function changeAccent(nextAccentColor: AccentColor) {
@@ -290,6 +302,15 @@ export function SettingsDialog({
       setCustomAccentValue(nextAccentColor.value);
     }
     preview(colorMode, nextAccentColor);
+  }
+
+  function changeAppearance(nextAppearance: AppearanceSettings) {
+    preview(colorMode, accentColor, nextAppearance);
+  }
+
+  /** 应用整套风格预设包：连同推荐强调色一起预览（预设包是完整 token 组合）。 */
+  function changeStylePreset(preset: StylePreset) {
+    preview(colorMode, { kind: "preset", value: preset.accent }, materializePreset(preset));
   }
 
   function changeCustomAccent(value: string) {
@@ -347,6 +368,7 @@ export function SettingsDialog({
       const saved = await updateSettings({
         colorMode,
         accentColor,
+        appearance,
         editor: {
           executable: editorProfile.executable.trim(),
           arguments: [...editorProfile.arguments],
@@ -372,6 +394,13 @@ export function SettingsDialog({
       const saved = await updateSettings({
         colorMode: DEFAULT_SETTINGS.colorMode,
         accentColor: { ...DEFAULT_SETTINGS.accentColor },
+        appearance: {
+          ...DEFAULT_SETTINGS.appearance,
+          neutrals: {
+            light: { ...DEFAULT_SETTINGS.appearance.neutrals.light },
+            dark: { ...DEFAULT_SETTINGS.appearance.neutrals.dark },
+          },
+        },
         editor: {
           executable: DEFAULT_SETTINGS.editor.executable,
           arguments: [...DEFAULT_SETTINGS.editor.arguments],
@@ -379,6 +408,7 @@ export function SettingsDialog({
       });
       setColorMode(saved.colorMode);
       setAccentColor(saved.accentColor);
+      setAppearance(saved.appearance);
       setCustomAccentValue("#0E7D8C");
        setEditorProfile({
          executable: saved.editor.executable,
@@ -386,7 +416,7 @@ export function SettingsDialog({
        });
        setArgumentsText(saved.editor.arguments.join("\n"));
        draftDirtyRef.current = false;
-       onThemePreview(saved.colorMode, saved.accentColor, windowsAccentColor);
+      onThemePreview(saved.colorMode, saved.accentColor, windowsAccentColor, saved.appearance);
       onSaved(saved);
       setResetConfirmOpen(false);
       setGeneralFeedback({ kind: "success", message: "Settings reset to the Rust defaults." });
@@ -538,13 +568,16 @@ export function SettingsDialog({
               <SettingsAppearancePanel
                 colorMode={colorMode}
                 accentColor={accentColor}
+                appearance={appearance}
                 customAccentValue={customAccentValue}
                 windowsAccentColor={windowsAccentColor}
                 windowsAccentLoading={windowsAccentLoading}
                 windowsAccentError={windowsAccentError}
                 onColorModeChange={(next) => preview(next, accentColor)}
                 onAccentChange={changeAccent}
+                onAppearanceChange={changeAppearance}
                 onCustomAccentChange={changeCustomAccent}
+                onStylePresetSelect={changeStylePreset}
                 onRetryWindowsAccent={() => void readWindowsAccent()}
               />
             )}

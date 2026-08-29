@@ -4,7 +4,8 @@
 // D6：Open in editor 等操作按钮经由 props 回调接入，本页不直接调用 IPC。
 
 import type { Project, ScanState } from "../types/project";
-import { activityText, formatDateTime, gitLine, gitSyncLine, relativeTime, shortHash } from "../lib/cards";
+import { activityText, coverKindFor, formatDateTime, gitLine, gitSyncLine, relativeTime, shortHash, type CoverKind } from "../lib/cards";
+import { COVER_ICONS } from "../components/ProjectCard";
 import { Icon, type IconName } from "../components/Icon";
 
 const GIT_STATUS_ICONS: Record<"clean" | "modified" | "unknown", IconName> = {
@@ -37,25 +38,77 @@ export function ProjectDetail({
   onDelete: () => void;
 }) {
   const now = Date.now();
+  const coverKind: CoverKind = coverKindFor(
+    scan?.status === "ok" ? scan.data.projectType : null,
+  );
 
   return (
     <div className="detail">
-      <header className="detail-header">
-        <button className="btn small" onClick={onBack}>
-          <Icon name="arrow-left" size={15} />
-          <span>Back</span>
-        </button>
-        <div className="detail-title">
-          <h2>{project.name}</h2>
-          <span className="type-chip">
-            <Icon name="overview" size={13} />
-            {(scan?.status === "ok" ? scan.data.projectType : null) ?? "Unknown project type"}
-          </span>
+      <header className="detail-hero">
+        <div className="detail-hero-top">
+          <button className="btn small" onClick={onBack}>
+            <Icon name="arrow-left" size={15} />
+            <span>Back</span>
+          </button>
         </div>
-        <p className="mono muted detail-path">
-          <Icon name="folder-open" size={15} />
-          <span>{project.path}</span>
-        </p>
+        <div className="detail-hero-main">
+          <div className={`detail-cover cover-${coverKind}`} aria-hidden="true">
+            <Icon name={COVER_ICONS[coverKind]} size={30} />
+          </div>
+          <div className="detail-hero-heading">
+            <div className="detail-title">
+              <h2>{project.name}</h2>
+              <span className="type-chip">
+                <Icon name="overview" size={13} />
+                {(scan?.status === "ok" ? scan.data.projectType : null) ?? "Unknown project type"}
+              </span>
+            </div>
+            <p className="mono muted detail-path">
+              <Icon name="folder-open" size={15} />
+              <span>{project.path}</span>
+            </p>
+          </div>
+        </div>
+        <div className="detail-actions">
+          <button className="btn" onClick={onOpen}>
+            <Icon name="folder-open" size={16} />
+            <span>Open</span>
+          </button>
+          <button
+            className="btn"
+            onClick={onRun}
+            disabled={!project.runCommand}
+            title={project.runCommand ? undefined : "Run command not configured"}
+          >
+            <Icon name="play" size={16} />
+            <span>Run</span>
+          </button>
+          <button
+            className="btn"
+            onClick={onBuild}
+            disabled={!project.buildCommand}
+            title={project.buildCommand ? undefined : "Build command not configured"}
+          >
+            <Icon name="hammer" size={16} />
+            <span>Build</span>
+          </button>
+          <button className="btn" onClick={onOpenInEditor}>
+            <Icon name="code" size={16} />
+            <span>Open in editor</span>
+          </button>
+          <button className="btn" onClick={onRefresh}>
+            <Icon name="refresh" size={16} />
+            <span>Refresh</span>
+          </button>
+          <button className="btn" onClick={onEdit}>
+            <Icon name="pencil" size={16} />
+            <span>Edit</span>
+          </button>
+          <button className="btn btn-outline-danger" onClick={onDelete}>
+            <Icon name="trash" size={16} />
+            <span>Delete</span>
+          </button>
+        </div>
       </header>
 
       {!scan || scan.status === "loading" ? (
@@ -237,53 +290,6 @@ export function ProjectDetail({
                 </h3>
                 <p className="detail-activity">{activityText(meta.activity, now)}</p>
                 <p className="mono muted">Scanned {relativeTime(meta.activity.lastScannedAt, now)}</p>
-              </section>
-
-              <section className="detail-section">
-                <h3 className="detail-section-title">
-                  <Icon name="zap" size={16} />
-                  <span>Actions</span>
-                </h3>
-                <div className="detail-actions">
-                  <button className="btn" onClick={onOpen}>
-                    <Icon name="folder-open" size={16} />
-                    <span>Open</span>
-                  </button>
-                  <button
-                    className="btn"
-                    onClick={onRun}
-                    disabled={!project.runCommand}
-                    title={project.runCommand ? undefined : "Run command not configured"}
-                  >
-                    <Icon name="play" size={16} />
-                    <span>Run</span>
-                  </button>
-                  <button
-                    className="btn"
-                    onClick={onBuild}
-                    disabled={!project.buildCommand}
-                    title={project.buildCommand ? undefined : "Build command not configured"}
-                  >
-                    <Icon name="hammer" size={16} />
-                    <span>Build</span>
-                  </button>
-                  <button className="btn" onClick={onOpenInEditor}>
-                    <Icon name="code" size={16} />
-                    <span>Open in editor</span>
-                  </button>
-                  <button className="btn" onClick={onRefresh}>
-                    <Icon name="refresh" size={16} />
-                    <span>Refresh</span>
-                  </button>
-                  <button className="btn" onClick={onEdit}>
-                    <Icon name="pencil" size={16} />
-                    <span>Edit</span>
-                  </button>
-                  <button className="btn btn-outline-danger" onClick={onDelete}>
-                    <Icon name="trash" size={16} />
-                    <span>Delete</span>
-                  </button>
-                </div>
               </section>
             </div>
           );

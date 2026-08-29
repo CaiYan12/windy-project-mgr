@@ -19,6 +19,7 @@ import {
   windowsBgrDwordToCss,
   type EditorProfile,
 } from "./theme";
+import { DEFAULT_APPEARANCE, STYLE_PRESETS } from "./appearance";
 
 describe("accent presets", () => {
   it("exports the six stable ids and exact CSS values", () => {
@@ -102,12 +103,16 @@ describe("derived accent variables", () => {
     expect(variables).toEqual({
       "--accent": "#0E7D8C",
       "--accent-hover": expect.stringMatching(/^#[0-9A-F]{6}$/),
+      "--accent-ink": expect.stringMatching(/^#[0-9A-F]{6}$/),
       "--accent-soft": expect.stringMatching(/^#[0-9A-F]{6}$/),
       "--focus": "#0E7D8C",
       "--on-accent": "#FFFFFF",
     });
     expect(variables["--accent-hover"]).not.toBe(variables["--accent"]);
     expect(deriveAccentVariables("#D97706", "light")["--on-accent"]).toBe("#111827");
+    // accent-ink 必须比原 accent 更深（向 ink 收敛），保证中性面上的文字对比度。
+    const amber = deriveAccentVariables("#D97706", "light")["--accent-ink"];
+    expect(amber).toBe("#A75F0E");
   });
 
   it("uses the effective light or dark formula for system mode", () => {
@@ -144,6 +149,7 @@ describe("system theme media resolution", () => {
     expect(matchMedia).toHaveBeenCalledWith("(prefers-color-scheme: dark)");
     expect(properties.get("--accent-hover")).toBe("#2B8D9A");
     expect(properties.get("--accent-soft")).toBe("#052C31");
+    expect(properties.get("--accent-ink")).toBe("#4598A5");
   });
 
   it("falls back to the light formula when matchMedia is unavailable", () => {
@@ -163,6 +169,7 @@ describe("system theme media resolution", () => {
 
       expect(properties.get("--accent-hover")).toBe("#0C6E7B");
       expect(properties.get("--accent-soft")).toBe("#E2EFF1");
+      expect(properties.get("--accent-ink")).toBe("#0F6473");
     } finally {
       vi.unstubAllGlobals();
     }
@@ -170,7 +177,7 @@ describe("system theme media resolution", () => {
 });
 
 describe("reversible theme preview", () => {
-  it("changes only data-theme and the five accent variables, then restores them", () => {
+  it("changes only data-theme and the six accent variables, then restores them", () => {
     const attributes = new Map<string, string>();
     const properties = new Map<string, string>();
     const root = {
@@ -206,6 +213,7 @@ describe("reversible theme preview", () => {
     expect([...properties.keys()].sort()).toEqual([
       "--accent",
       "--accent-hover",
+      "--accent-ink",
       "--accent-soft",
       "--focus",
       "--on-accent",
@@ -241,5 +249,80 @@ describe("editor profile validation", () => {
     expect(validateEditorProfile({ executable: "open.cmd", arguments: ['--title="x"', "{path}"] })).toMatch(
       /double quote/,
     );
+  });
+});
+
+describe("appearance variable application", () => {
+  function makeRoot() {
+    const attributes = new Map<string, string>();
+    const properties = new Map<string, string>();
+    return {
+      root: {
+        style: {
+          setProperty(name: string, value: string) {
+            properties.set(name, value);
+          },
+          getPropertyValue(name: string) {
+            return properties.get(name) ?? "";
+          },
+          removeProperty(name: string) {
+            properties.delete(name);
+          },
+        },
+        setAttribute(name: string, value: string) {
+          attributes.set(name, value);
+        },
+        getAttribute(name: string) {
+          return attributes.get(name) ?? null;
+        },
+        removeAttribute(name: string) {
+          attributes.delete(name);
+        },
+      } as unknown as HTMLElement,
+      attributes,
+      properties,
+    };
+  }
+
+  it("applies appearance variables for the effective mode and reverses them", () => {
+    const { root, properties } = makeRoot();
+    const cloud = STYLE_PRESETS.find((preset) => preset.id === "cloud")!;
+
+    applyTheme(root, "light", DEFAULT_ACCENT_COLOR, null, false, DEFAULT_APPEARANCE);
+    const saved = captureThemeState(root);
+
+    previewTheme(root, "dark", { kind: "preset", value: "rose" }, null, {
+      ...DEFAULT_APPEARANCE,
+      stylePreset: "cloud",
+      radius: 18,
+      density: "compact",
+      fontFamily: '"Cascadia Code", monospace',
+      neutrals: cloud.neutrals,
+    });
+
+    expect(properties.get("--bg")).toBe(cloud.neutrals.dark.bg);
+    expect(properties.get("--app-radius")).toBe("18px");
+    expect(properties.get("--app-density")).toBe("0.85");
+    expect(properties.get("--font-body")).toBe('"Cascadia Code", monospace');
+    expect(properties.get("--accent")).toBe("#D94675");
+
+    restoreThemeState(root, saved);
+    expect(properties.get("--bg")).toBe("#f5f6f8");
+    expect(properties.get("--app-radius")).toBe("10px");
+    expect(properties.get("--app-density")).toBe("1");
+    expect(properties.get("--font-body")).toBeUndefined();
+  });
+
+  it("removes the inline font stack when the custom family is cleared", () => {
+    const { root, properties } = makeRoot();
+
+    applyTheme(root, "light", DEFAULT_ACCENT_COLOR, null, false, {
+      ...DEFAULT_APPEARANCE,
+      fontFamily: "Georgia, serif",
+    });
+    expect(properties.get("--font-body")).toBe("Georgia, serif");
+
+    applyTheme(root, "light", DEFAULT_ACCENT_COLOR, null, false, DEFAULT_APPEARANCE);
+    expect(properties.has("--font-body")).toBe(false);
   });
 });

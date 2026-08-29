@@ -8,20 +8,22 @@ import {
   updateSettings,
   type AppSettings,
 } from "./api";
+import { DEFAULT_APPEARANCE } from "./appearance";
 
 vi.mock("@tauri-apps/api/core", () => ({
   invoke: vi.fn(),
 }));
 
-describe("settings v2 IPC wrappers", () => {
+describe("settings v3 IPC wrappers", () => {
   beforeEach(() => {
     vi.mocked(invoke).mockReset();
   });
 
-  it("uses the exact get_settings command and v2 return type", async () => {
+  it("uses the exact get_settings command and v3 return type", async () => {
     const settings: AppSettings = {
       colorMode: "system",
       accentColor: { kind: "preset", value: "windy-teal" },
+      appearance: DEFAULT_APPEARANCE,
       editor: { executable: "", arguments: ["{path}"] },
     };
     vi.mocked(invoke).mockResolvedValue(settings);
@@ -34,6 +36,7 @@ describe("settings v2 IPC wrappers", () => {
     const settings: AppSettings = {
       colorMode: "dark",
       accentColor: { kind: "custom", value: "#123456" },
+      appearance: DEFAULT_APPEARANCE,
       editor: { executable: "code", arguments: ["--reuse-window", "{path}"] },
     };
     vi.mocked(invoke).mockResolvedValue(settings);

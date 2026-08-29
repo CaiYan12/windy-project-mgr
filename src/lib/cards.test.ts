@@ -3,6 +3,7 @@
 import { describe, expect, it } from "vitest";
 import {
   activityText,
+  coverKindFor,
   formatDateTime,
   gitLine,
   gitSyncLine,
@@ -123,5 +124,21 @@ describe("formatDateTime", () => {
 
   it("returns the input unchanged when unparsable", () => {
     expect(formatDateTime("not-a-date")).toBe("not-a-date");
+  });
+});
+
+describe("coverKindFor", () => {
+  it("maps scanner project types to cover kinds", () => {
+    expect(coverKindFor("Node")).toBe("node");
+    expect(coverKindFor("Python")).toBe("python");
+    expect(coverKindFor("Rust")).toBe("rust");
+    expect(coverKindFor("Java")).toBe("java");
+    expect(coverKindFor("C#")).toBe("csharp");
+  });
+
+  it("degrades unknown and missing types to the neutral cover", () => {
+    expect(coverKindFor("Unknown")).toBe("unknown");
+    expect(coverKindFor(null)).toBe("unknown");
+    expect(coverKindFor("  ")).toBe("unknown");
   });
 });

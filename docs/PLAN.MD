@@ -6,7 +6,7 @@
 
 ## 0. 执行进度追踪（Checkbox）
 
-> **执行进度：16 / 16 Phase 完成 · 37 / 37 子任务（最后更新：2026-08-28；Phase 15 图标细节与 Git 扫描窗口回归修复已完成并生成 build 产物，MVP 交付闭环）**
+> **执行进度：16 / 16 Phase 完成 · 37 / 37 子任务（最后更新：2026-08-30；Phase 15 图标细节与 Git 扫描窗口回归修复已完成并生成 build 产物，MVP 交付闭环。2026-08-30 post-MVP：结构级 UI 焕新（网易云语法）+ settings v3 主题工坊 + 自绘滚动条完成并验收，vitest 87 / cargo 155 / build / 四档宽度亮暗视觉验收通过，详见 CHANGELOG 与 PROJECT_STATUS）**
 
 ### Phase 0 环境审计
 
