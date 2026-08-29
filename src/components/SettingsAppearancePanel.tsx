@@ -1,5 +1,6 @@
 import { useRef, type CSSProperties, type KeyboardEvent } from "react";
 import type { AccentColor, ColorMode } from "../lib/api";
+import { Icon } from "./Icon";
 import {
   ACCENT_PRESETS,
   THEMES,
@@ -87,6 +88,7 @@ export function SettingsAppearancePanel({
         <div className="settings-section-heading">
           <div>
             <h3 id="settings-color-mode-title" className="settings-section-title">
+              <Icon name="monitor" size={18} />
               Color mode
             </h3>
             <p className="settings-section-description">
@@ -107,6 +109,12 @@ export function SettingsAppearancePanel({
                 checked={colorMode === theme.value}
                 onChange={() => onColorModeChange(theme.value)}
               />
+              <span className="settings-mode-icon" aria-hidden="true">
+                <Icon
+                  name={theme.value === "system" ? "monitor" : theme.value === "light" ? "sun" : "moon"}
+                  size={20}
+                />
+              </span>
               <span className={`settings-mode-swatch ${theme.value}`} aria-hidden="true" />
               <span className="settings-mode-copy">
                 <strong>{theme.label}</strong>
@@ -127,6 +135,7 @@ export function SettingsAppearancePanel({
         <div className="settings-section-heading">
           <div>
             <h3 id="settings-accent-title" className="settings-section-title">
+              <Icon name="palette" size={18} />
               Accent color
             </h3>
             <p className="settings-section-description">
@@ -162,14 +171,18 @@ export function SettingsAppearancePanel({
                   style={{ "--settings-preview-color": option.previewColor } as CSSProperties}
                   aria-hidden="true"
                 />
-                <span>{option.label}</span>
+                <span className="settings-accent-card-label">{option.label}</span>
+                {selected && <Icon name="check-circle" size={15} />}
               </button>
             );
           })}
         </div>
 
         <div className="settings-custom-field">
-          <label htmlFor="settings-custom-accent">Custom #RRGGBB</label>
+          <label htmlFor="settings-custom-accent">
+            <Icon name="palette" size={15} />
+            <span>Custom #RRGGBB</span>
+          </label>
           <input
             id="settings-custom-accent"
             type="text"
@@ -187,8 +200,9 @@ export function SettingsAppearancePanel({
             onChange={(event) => onCustomAccentChange(event.target.value)}
           />
           {customError && (
-            <p id="settings-custom-accent-error" className="settings-error">
-              {customError}
+            <p id="settings-custom-accent-error" className="settings-error settings-inline-message">
+              <Icon name="alert-triangle" size={15} />
+              <span>{customError}</span>
             </p>
           )}
         </div>
@@ -196,8 +210,12 @@ export function SettingsAppearancePanel({
         {windowsAccentLoading && <p className="settings-hint">Reading the Windows accent color…</p>}
         {windowsAccentError && (
           <div className="settings-inline-alert" role="alert">
-            <span>{windowsAccentError} Windy teal is being used as a fallback.</span>
+            <div className="inline-alert-copy">
+              <Icon name="alert-triangle" size={17} />
+              <span>{windowsAccentError} Windy teal is being used as a fallback.</span>
+            </div>
             <button type="button" className="link-btn" onClick={onRetryWindowsAccent}>
+              <Icon name="refresh" size={14} />
               Try again
             </button>
           </div>

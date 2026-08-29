@@ -2,8 +2,13 @@
 
 use serde::Serialize;
 use std::collections::BTreeMap;
+#[cfg(windows)]
+use std::os::windows::process::CommandExt;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+
+#[cfg(windows)]
+const CREATE_NO_WINDOW: u32 = 0x0800_0000;
 
 const UNINSTALL_ROOTS: [&str; 3] = [
     r"HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall",
@@ -636,7 +641,11 @@ fn run_where(alias: &str) -> Result<String, String> {
 }
 
 fn run_command_capture(program: &str, args: &[String]) -> Result<CommandCapture, String> {
-    let output = Command::new(program)
+    let mut command = Command::new(program);
+    #[cfg(windows)]
+    command.creation_flags(CREATE_NO_WINDOW);
+
+    let output = command
         .args(args)
         .output()
         .map_err(|error| command_error_message(program, &error))?;
@@ -645,6 +654,15 @@ fn run_command_capture(program: &str, args: &[String]) -> Result<CommandCapture,
         stdout: String::from_utf8_lossy(&output.stdout).into_owned(),
         stderr: String::from_utf8_lossy(&output.stderr).into_owned(),
     })
+}
+
+#[cfg(test)]
+mod tests {
+    #[cfg(windows)]
+    #[test]
+    fn system_child_processes_use_the_no_window_creation_flag() {
+        assert_eq!(super::CREATE_NO_WINDOW, 0x0800_0000);
+    }
 }
 
 fn standard_search_roots() -> Vec<PathBuf> {

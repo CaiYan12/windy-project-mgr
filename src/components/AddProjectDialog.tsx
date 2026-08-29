@@ -4,6 +4,7 @@
 import { useState } from "react";
 import { open as openFilePicker } from "@tauri-apps/plugin-dialog";
 import { Modal } from "./Modal";
+import { Icon } from "./Icon";
 import { parseTags, ProjectFields, type ProjectFormState } from "./ProjectFields";
 import { createProject, listScripts } from "../lib/api";
 import { lastSegment, samePath } from "../lib/paths";
@@ -139,19 +140,23 @@ export function AddProjectDialog({
         step === 1 ? (
           <>
             <button className="btn" onClick={onClose}>
-              Cancel
+              <Icon name="close" size={15} />
+              <span>Cancel</span>
             </button>
             <button className="btn btn-primary" onClick={next} disabled={busy}>
-              Next
+              <Icon name="chevron-right" size={15} />
+              <span>Next</span>
             </button>
           </>
         ) : (
           <>
             <button className="btn" onClick={() => setStep(1)} disabled={busy}>
-              Back
+              <Icon name="chevron-left" size={15} />
+              <span>Back</span>
             </button>
             <button className="btn btn-primary" onClick={submit} disabled={busy}>
-              Add project
+              <Icon name="folder-plus" size={15} />
+              <span>Add project</span>
             </button>
           </>
         )
@@ -160,16 +165,30 @@ export function AddProjectDialog({
       {step === 1 ? (
         <>
           <ProjectFields state={form} onChange={patch} showCommands={false} nameAutoHint />
-          {error && <p className="form-error">{error}</p>}
+          {error && (
+            <p className="form-error">
+              <Icon name="alert-triangle" size={16} />
+              <span>{error}</span>
+            </p>
+          )}
         </>
       ) : (
         <div className="script-step">
           <p className="script-hint">
-            Pick a startup script to run this project. You can change this later.
+            <Icon name="file-script" size={18} />
+            <span>Pick a startup script to run this project. You can change this later.</span>
           </p>
-          {scriptsError && <p className="form-error">{scriptsError}</p>}
+          {scriptsError && (
+            <p className="form-error">
+              <Icon name="alert-triangle" size={16} />
+              <span>{scriptsError}</span>
+            </p>
+          )}
           {scripts.length === 0 && !scriptsError && (
-            <p className="muted">No startup scripts found in the project root.</p>
+            <p className="muted detail-inline-message">
+              <Icon name="file-script" size={16} />
+              <span>No startup scripts found in the project root.</span>
+            </p>
           )}
           <div className="script-list">
             {options.map((s) => (
@@ -181,6 +200,7 @@ export function AddProjectDialog({
                   onChange={() => setSelected(s.path)}
                 />
                 <span className="script-name">
+                  <Icon name="file-script" size={16} />
                   {s.name}
                   {s.path === scripts[0]?.path && (
                     <span className="script-suggest">suggested</span>
@@ -195,15 +215,24 @@ export function AddProjectDialog({
                 name="startup-script"
                 checked={selected === null}
                 onChange={() => setSelected(null)}
-              />
-              <span className="script-name">None</span>
+                />
+              <span className="script-name">
+                <Icon name="ban" size={16} />
+                <span>None</span>
+              </span>
               <span className="script-path">Run command stays empty</span>
             </label>
           </div>
           <button className="btn small" onClick={pickScript}>
-            Choose a script file…
+            <Icon name="folder-open" size={15} />
+            <span>Choose a script file…</span>
           </button>
-          {error && <p className="form-error">{error}</p>}
+          {error && (
+            <p className="form-error">
+              <Icon name="alert-triangle" size={16} />
+              <span>{error}</span>
+            </p>
+          )}
         </div>
       )}
     </Modal>

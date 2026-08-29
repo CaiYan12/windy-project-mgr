@@ -5,6 +5,13 @@
 
 import type { Project, ScanState } from "../types/project";
 import { activityText, formatDateTime, gitLine, gitSyncLine, relativeTime, shortHash } from "../lib/cards";
+import { Icon, type IconName } from "../components/Icon";
+
+const GIT_STATUS_ICONS: Record<"clean" | "modified" | "unknown", IconName> = {
+  clean: "check-circle",
+  modified: "alert-triangle",
+  unknown: "help-circle",
+};
 
 export function ProjectDetail({
   project,
@@ -35,19 +42,25 @@ export function ProjectDetail({
     <div className="detail">
       <header className="detail-header">
         <button className="btn small" onClick={onBack}>
-          ← Back
+          <Icon name="arrow-left" size={15} />
+          <span>Back</span>
         </button>
         <div className="detail-title">
           <h2>{project.name}</h2>
           <span className="type-chip">
+            <Icon name="overview" size={13} />
             {(scan?.status === "ok" ? scan.data.projectType : null) ?? "Unknown project type"}
           </span>
         </div>
-        <p className="mono muted detail-path">{project.path}</p>
+        <p className="mono muted detail-path">
+          <Icon name="folder-open" size={15} />
+          <span>{project.path}</span>
+        </p>
       </header>
 
       {!scan || scan.status === "loading" ? (
         <div className="detail-skeleton" aria-busy="true">
+          <Icon name="refresh" size={20} className="detail-skeleton-icon" />
           <div className="skel skel-title" />
           <div className="skel skel-line" />
           <div className="skel skel-line short" />
@@ -55,9 +68,13 @@ export function ProjectDetail({
         </div>
       ) : scan.status === "error" ? (
         <div className="detail-section detail-error">
-          <p>Scan failed: {scan.message}</p>
+          <p className="detail-error-message">
+            <Icon name="alert-triangle" size={18} />
+            <span>Scan failed: {scan.message}</span>
+          </p>
           <button className="btn small" onClick={onRefresh}>
-            Retry
+            <Icon name="refresh" size={15} />
+            <span>Retry</span>
           </button>
         </div>
       ) : (
@@ -67,7 +84,10 @@ export function ProjectDetail({
           return (
             <div className="detail-grid">
               <section className="detail-section">
-                <h3 className="detail-section-title">Overview</h3>
+                <h3 className="detail-section-title">
+                  <Icon name="overview" size={16} />
+                  <span>Overview</span>
+                </h3>
                 <p className="detail-desc">{project.description || "No description"}</p>
                 {project.tags.length > 0 && (
                   <div className="tech-row">
@@ -80,11 +100,17 @@ export function ProjectDetail({
                 )}
                 <dl className="detail-kv">
                   <div className="detail-kv-row">
-                    <dt>Created</dt>
+                    <dt>
+                      <Icon name="history" size={14} />
+                      <span>Created</span>
+                    </dt>
                     <dd>{formatDateTime(project.createdAt)}</dd>
                   </div>
                   <div className="detail-kv-row">
-                    <dt>Run command</dt>
+                    <dt>
+                      <Icon name="play" size={14} />
+                      <span>Run command</span>
+                    </dt>
                     <dd>
                       {project.runCommand ? (
                         <code className="mono">{project.runCommand}</code>
@@ -94,7 +120,10 @@ export function ProjectDetail({
                     </dd>
                   </div>
                   <div className="detail-kv-row">
-                    <dt>Build command</dt>
+                    <dt>
+                      <Icon name="hammer" size={14} />
+                      <span>Build command</span>
+                    </dt>
                     <dd>
                       {project.buildCommand ? (
                         <code className="mono">{project.buildCommand}</code>
@@ -107,9 +136,15 @@ export function ProjectDetail({
               </section>
 
               <section className="detail-section">
-                <h3 className="detail-section-title">Technology</h3>
+                <h3 className="detail-section-title">
+                  <Icon name="layers" size={16} />
+                  <span>Technology</span>
+                </h3>
                 <div className="tech-row">
-                  <span className="type-chip">{meta.projectType ?? "Unknown project type"}</span>
+                  <span className="type-chip">
+                    <Icon name="overview" size={13} />
+                    <span>{meta.projectType ?? "Unknown project type"}</span>
+                  </span>
                   {meta.techStack.map((t) => (
                     <span key={t} className="tech-chip">
                       {t}
@@ -117,18 +152,31 @@ export function ProjectDetail({
                   ))}
                 </div>
                 {meta.techStack.length === 0 && (
-                  <p className="muted detail-empty-inline">No tech stack detected</p>
+                  <p className="muted detail-empty-inline">
+                    <Icon name="layers" size={15} />
+                    <span>No tech stack detected</span>
+                  </p>
                 )}
               </section>
 
               <section className="detail-section">
-                <h3 className="detail-section-title">Git</h3>
+                <h3 className="detail-section-title">
+                  <Icon name="git-branch" size={16} />
+                  <span>Git</span>
+                </h3>
                 {meta.git === null ? (
-                  <p className="muted">No Git repository</p>
+                  <p className="muted detail-inline-message">
+                    <Icon name="help-circle" size={16} />
+                    <span>No Git repository</span>
+                  </p>
                 ) : (
                   <>
                     <p className="git-line">
-                      <span className={`status-dot ${meta.git.status}`} />
+                      <Icon
+                        name={GIT_STATUS_ICONS[meta.git.status]}
+                        size={16}
+                        className={`status-icon ${meta.git.status}`}
+                      />
                       <span className="mono">{gitLine(meta.git)}</span>
                       {syncLine && <span className="mono muted"> · {syncLine}</span>}
                     </p>
@@ -144,16 +192,25 @@ export function ProjectDetail({
                         </span>
                       </p>
                     ) : (
-                      <p className="muted">No commits yet</p>
+                      <p className="muted detail-inline-message">
+                        <Icon name="history" size={16} />
+                        <span>No commits yet</span>
+                      </p>
                     )}
                   </>
                 )}
               </section>
 
               <section className="detail-section">
-                <h3 className="detail-section-title">Recent Commits</h3>
+                <h3 className="detail-section-title">
+                  <Icon name="history" size={16} />
+                  <span>Recent Commits</span>
+                </h3>
                 {meta.git === null ? (
-                  <p className="muted">No Git repository</p>
+                  <p className="muted detail-inline-message">
+                    <Icon name="help-circle" size={16} />
+                    <span>No Git repository</span>
+                  </p>
                 ) : meta.git.recentCommits.length > 0 ? (
                   <div className="commit-list">
                     {meta.git.recentCommits.map((c) => (
@@ -166,21 +223,31 @@ export function ProjectDetail({
                     ))}
                   </div>
                 ) : (
-                  <p className="muted">No commits yet</p>
+                  <p className="muted detail-inline-message">
+                    <Icon name="history" size={16} />
+                    <span>No commits yet</span>
+                  </p>
                 )}
               </section>
 
               <section className="detail-section">
-                <h3 className="detail-section-title">Activity</h3>
+                <h3 className="detail-section-title">
+                  <Icon name="activity" size={16} />
+                  <span>Activity</span>
+                </h3>
                 <p className="detail-activity">{activityText(meta.activity, now)}</p>
                 <p className="mono muted">Scanned {relativeTime(meta.activity.lastScannedAt, now)}</p>
               </section>
 
               <section className="detail-section">
-                <h3 className="detail-section-title">Actions</h3>
+                <h3 className="detail-section-title">
+                  <Icon name="zap" size={16} />
+                  <span>Actions</span>
+                </h3>
                 <div className="detail-actions">
                   <button className="btn" onClick={onOpen}>
-                    Open
+                    <Icon name="folder-open" size={16} />
+                    <span>Open</span>
                   </button>
                   <button
                     className="btn"
@@ -188,7 +255,8 @@ export function ProjectDetail({
                     disabled={!project.runCommand}
                     title={project.runCommand ? undefined : "Run command not configured"}
                   >
-                    Run
+                    <Icon name="play" size={16} />
+                    <span>Run</span>
                   </button>
                   <button
                     className="btn"
@@ -196,19 +264,24 @@ export function ProjectDetail({
                     disabled={!project.buildCommand}
                     title={project.buildCommand ? undefined : "Build command not configured"}
                   >
-                    Build
+                    <Icon name="hammer" size={16} />
+                    <span>Build</span>
                   </button>
                   <button className="btn" onClick={onOpenInEditor}>
-                    Open in editor
+                    <Icon name="code" size={16} />
+                    <span>Open in editor</span>
                   </button>
                   <button className="btn" onClick={onRefresh}>
-                    Refresh
+                    <Icon name="refresh" size={16} />
+                    <span>Refresh</span>
                   </button>
                   <button className="btn" onClick={onEdit}>
-                    Edit
+                    <Icon name="pencil" size={16} />
+                    <span>Edit</span>
                   </button>
                   <button className="btn btn-outline-danger" onClick={onDelete}>
-                    Delete
+                    <Icon name="trash" size={16} />
+                    <span>Delete</span>
                   </button>
                 </div>
               </section>

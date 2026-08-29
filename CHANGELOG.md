@@ -6,6 +6,32 @@ MVP 完成前无正式版本号，变更记于 `Unreleased`。
 
 ## Unreleased
 
+### 2026-08-28 — Git 扫描控制台窗口回归修复
+
+- **根因**：添加项目后，`scan_project` 对 Git 仓库串行调用系统 Git CLI；Git 模块的 `Command::output()` 未设置 Windows `CREATE_NO_WINDOW`，因此绿色 EXE 会在扫描阶段闪现控制台窗口。
+- **修复**：`src-tauri/src/git/mod.rs` 为每次 Git 子进程设置 `CREATE_NO_WINDOW`；扫描字段、离线边界和现有命令面均未改变。
+- **验证**：新增 Windows 子进程隐藏契约测试并完成红→绿；`cargo test` 150/150、`pnpm test` 7 个文件 / 69 个测试、`pnpm build` 与 `build.bat` 均通过。真实绿色 EXE 走通 `D:\Dev\opia-rss-reader` Add Project 与 Detail Refresh；Add 阶段所有观测 Git 子进程均为 `hwnd=0`，Refresh 的 3 秒 UIA 观察无新增顶层窗口。
+
+### 2026-08-28 — 图标细节修复与 build 产物
+
+- 修复 Card / Detail 动作按钮图标与文字的垂直中轴：统一 16px 图标盒、固定行高和显式上下居中。
+- 将 `hammer` 自绘 SVG glyph 替换为用户提供的 1024×1024 填充 path，按 `scale(0.0234375)` 归一到 24×24，并使用 `currentColor` / `stroke="none"` 适配主题。
+- 按需求不启动实机窗口；`build.bat` 通过，产物写入 `build\\win-unpacked\\windy-project-mgr.exe`。
+- 静态契约回归：`pnpm test` 7 个文件 / 69 个测试通过。
+
+### 2026-08-27 — Phase 15 自绘 SVG 图标系统与全页面 UI 审计
+
+- **图标系统**：新增零依赖 `src/components/Icon.tsx`，集中维护 24×24、`currentColor`、圆端/圆角线条的自绘 SVG glyph；装饰图标默认隐藏于辅助技术，icon-only 控件提供明确的 `aria-label` 与 tooltip。
+- **全页面接入**：Dashboard、Sidebar、ProjectCard、Detail、Add/Edit/Confirm、Settings 三分页、More 菜单、Toast、空态、加载态和错误态均接入语义图标；Git clean / modified / unknown 同时使用形状与颜色表达。
+- **UI 审计**：补齐图标尺寸 / 间距 / 命中区 / 焦点 / flex 收缩 / 长文本换行 / 状态色规则，保留 reduced-motion 行为；静态 Vite 页面在 320 / 768 / 1024 / 1440 下无水平溢出或图标重叠，真实 Tauri 默认窗口完成主要交互路径复核。
+- **验证**：新增 `src/lib/iconUi.test.ts`；`pnpm test` 7 个文件 / 68 个测试通过，`pnpm build` 与 `git diff --check` 通过。未修改 Rust、IPC、持久化或命令契约。
+
+### 2026-08-27 — 构建版系统查询窗口稳定性修复
+
+- **问题证据**：真实绿色构建版快速打开 Settings 时，进程采样确认反复启动 `reg.exe query HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Accent`；用户同时观察到短暂系统窗口、卡顿及 `reg.exe` `0xc0000142` 错误对话框。
+- **修复**：Windows 下系统发现与 Windows accent 查询共用的 `Command::output()` 现在设置 `CREATE_NO_WINDOW`，不再为控制台子进程创建可见窗口；新增 Windows 编译回归断言。
+- **回归**：修复后重建绿色目录与 ZIP，真实窗口中 Settings 与 Add Project 各连续开关 5 次均成功，无错误窗口，结束后无残留 `reg.exe`；`cargo test` 149/149、Vitest 64/64、`pnpm build` 均通过。
+
 ### 2026-08-27 — Phase 14 最终验收完成与计划文档清理
 
 - **最终验收**：用户确认 Functional、Error Handling、UX、Stability、Production 及五项增量验收全部通过，进度更新为 15 / 15 Phase、34 / 34 子任务，MVP 交付闭环。

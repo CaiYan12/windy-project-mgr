@@ -1,15 +1,19 @@
 # Windy Project Manager Development Status
 
 Current Phase:
-Phase 14 — 最终测试与验收已完成；MVP 交付闭环
+Phase 15 — 自绘 SVG 图标系统与全页面 UI 审计已完成；2026-08-28 图标细节与 Git 扫描窗口回归修复构建完成
 
 Status:
-PASS — Phase 0~14 全部完成；Settings v2、绿色 ZIP 与最终 Functional / Error Handling / UX / Stability / Production 人工验收已完成
+PASS — Phase 0~15 全部完成；Settings v2、绿色 ZIP、图标系统、图标细节与 Git 扫描窗口回归修复均已验证
 
 Completed:
+- 2026-08-28 Git 扫描窗口回归修复：定位 `scan_project` 在 Git 仓库中串行调用 6 次系统 Git CLI 时未设置 `CREATE_NO_WINDOW`，导致绿色 EXE 添加项目后闪现控制台窗口；新增 Windows 子进程契约测试并完成红→绿。真实绿色 EXE 通过 `D:\Dev\opia-rss-reader` Add Project 与 Detail Refresh，Add 后卡片在 266.9ms 出现且所有观测 Git 子进程均为 `hwnd=0`，Refresh 返回 40.0ms 且 3 秒 UIA 监控无新增顶层窗口；验证数据已清理。
+- 2026-08-28 图标细节修复：Card / Detail 动作按钮统一 16px 图标盒、固定行高与上下居中；将 hammer 替换为用户指定的 1024×1024 填充 path，按 `scale(0.0234375)` 归一到 24×24，并使用 `currentColor` / `stroke="none"`。按用户要求未启动实机；`build.bat` 与随后静态 `pnpm test`（7 个文件 / 69 个测试）均通过；产物为 `build\\win-unpacked\\windy-project-mgr.exe`（9,881,088 bytes）。
+- 2026-08-27 Phase 15 图标系统与 UI 审计：新增零依赖自绘 `src/components/Icon.tsx` 与 `src/lib/iconUi.test.ts`，接入全页面语义图标；完成主题 / 强调色、Git 状态形状 + 颜色、焦点命中区、长文本收缩和 reduced-motion 契约复核。静态 Vite 页面在 320 / 768 / 1024 / 1440 下无水平溢出；真实 Tauri 默认窗口完成 Dashboard、More、Add/Edit/Confirm、Detail、Settings、Toast/错误路径复核。响应式数值尺寸未冒充原生 Tauri 拖拽缩放结果。
 - 2026-08-27 Settings v2 Stage 8/9：真实 Tauri 窗口完成主题模式与强调色、General、编辑器发现、VS Code/Qoder 文件夹工作区、Other 选择、参数校验和未配置提示验收；修复未扫描到的 Other 可执行文件不显示所选路径的问题。证据见 .superpowers/sdd/2026-08-27-settings-overhaul/task-7-report.md 与 task-8-bugfix-report.md
-- 最终自动化验证：Vitest 64/64、Cargo 148/148、pnpm build 与 git diff --check 均通过。
-- 用户确认最终人工测试与验收全部通过，Phase 14 三项收尾复选框已完成；本次仅同步状态与配置，不改功能代码。
+- 2026-08-27 构建版稳定性回归修复：定位 Settings 打开时系统查询子进程未隐藏导致的 `reg.exe` 瞬时窗口与卡顿；为 Windows 系统查询统一设置 `CREATE_NO_WINDOW`，并在新绿色构建版中完成 Settings / Add Project 各 5 次快速开关回归，未再出现错误窗口或残留 `reg.exe`。
+- 最终自动化验证：本轮 `pnpm test` 7 个文件 / 68 个测试通过，`pnpm build` 与 `git diff --check` 通过；Cargo 149/149 的后端基线保持通过。
+- 用户确认最终人工测试与验收全部通过，Phase 14 三项收尾复选框已完成；随后构建版系统查询窗口稳定性缺陷已修复并回归通过。
 - Phase 0：rustup / stable 工具链安装与验证，全环境审计实测并记入下表
 - Phase 1：`CONTEXT.md` 术语表、`CHANGELOG.md`、`TESTING.md` 验收清单骨架、`docs/adr/0001~0003` 三份 ADR 落盘（均验证：存在 + 严格 UTF-8 无乱码）
 - Phase 2：create-tauri-app 4.6.2 脚手架（react-ts 模板，D11：pnpm + React 19.2.8 + TS 5.8.3 + Vite 7.3.6 + Tauri 2.11.5，identifier `com.windy.project-mgr`）；`pnpm tauri dev` 启动验证通过（Vite 287ms ready，首次 470 crates 编译 1m57s，应用进程拉起无报错）；`pnpm tauri build` 通过（release 编译 2m21s，产出 MSI + NSIS 双 bundle）
@@ -33,13 +37,13 @@ Blocked:
 - None
 
 Tests:
-- Passed: cargo 148/148（2026-08-27 full run；含 actions_commands 6、launch 38、settings 15、system_commands 17）；vitest 64/64（含 Settings UI 纯逻辑/静态契约回归，2026-08-27）
+- Passed: cargo 150/150（2026-08-28 full run；含 Git 扫描 Windows 子进程隐藏回归断言、Windows 系统子进程隐藏回归断言、actions_commands 6、launch 38、settings 15、system_commands 17）；vitest 69/69（含 Settings UI 与 Phase 15 图标纯逻辑/静态契约回归，2026-08-28）
 - Failed: 0
 - Not Run: 0
 
 Build:
 - Development: PASS（完整清理后 `start.bat` 冷启动验证，2026-08-26；56.84s，`target` 2.169 GiB）
-- Production: PASS（`build.bat` 绿色 ZIP，2026-08-26；release EXE 9.27 MiB，ZIP 2.86 MiB，解压启动通过）
+- Production: PASS（`build.bat` 绿色 ZIP，2026-08-28 Git 扫描窗口修复后重建；绿色 EXE 实际 Add Project / Refresh 无新增顶层窗口；EXE 9,881,088 bytes，ZIP 3,077,042 bytes）
 
 Known Issues:
 - Other 可执行文件只保证启动，不保证支持文件夹工作区；本机 Notepad 启动后明确提示无法打开项目文件夹，VS Code 与 Qoder 的真实窗口验证通过
@@ -48,7 +52,7 @@ Known Issues:
 - `%USERPROFILE%\.cargo\bin` 已加入用户 PATH，但当前会话已打开的 shell 不会自动刷新；验证时使用全路径，新开终端可直接使用 `rustc` / `cargo`
 
 Next Step:
-- MVP 已完成；无未完成 Phase
+- Git 扫描窗口回归修复已完成，`build\\win-unpacked` 与版本化 ZIP 已生成；无未完成代码工作
 
 ---
 

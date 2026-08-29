@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Modal } from "./Modal";
+import { Icon } from "./Icon";
 import { parseTags, ProjectFields, type ProjectFormState } from "./ProjectFields";
 import { updateProject } from "../lib/api";
 import type { Project } from "../types/project";
@@ -62,16 +63,23 @@ export function EditProjectDialog({
       footer={
         <>
           <button className="btn" onClick={onClose}>
-            Cancel
+            <Icon name="close" size={15} />
+            <span>Cancel</span>
           </button>
           <button className="btn btn-primary" onClick={save} disabled={busy}>
-            Save changes
+            <Icon name="check-circle" size={15} />
+            <span>Save changes</span>
           </button>
         </>
       }
     >
       <ProjectFields state={form} onChange={patch} showCommands />
-      {error && <p className="form-error">{error}</p>}
+      {error && (
+        <p className="form-error">
+          <Icon name="alert-triangle" size={16} />
+          <span>{error}</span>
+        </p>
+      )}
     </Modal>
   );
 }

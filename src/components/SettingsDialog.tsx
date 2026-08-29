@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { KeyboardEvent, CSSProperties } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { Modal } from "./Modal";
+import { Icon, type IconName } from "./Icon";
 import { SettingsAppearancePanel } from "./SettingsAppearancePanel";
 import { SettingsEditorPanel } from "./SettingsEditorPanel";
 import { SettingsGeneralPanel } from "./SettingsGeneralPanel";
@@ -31,10 +32,10 @@ import {
 
 type SettingsTab = "appearance" | "editor" | "general";
 
-const TABS: ReadonlyArray<{ id: SettingsTab; label: string }> = [
-  { id: "appearance", label: "Appearance" },
-  { id: "editor", label: "Editor" },
-  { id: "general", label: "General" },
+const TABS: ReadonlyArray<{ id: SettingsTab; label: string; icon: IconName }> = [
+  { id: "appearance", label: "Appearance", icon: "palette" },
+  { id: "editor", label: "Editor", icon: "code" },
+  { id: "general", label: "General", icon: "info" },
 ];
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -421,14 +422,26 @@ export function SettingsDialog({
         onClose={cancel}
         closeDisabled={isSettingsBusy}
         wide
-        footer={<button className="btn" onClick={cancel} disabled={isSettingsBusy}>Close</button>}
+        footer={
+          <button className="btn" onClick={cancel} disabled={isSettingsBusy}>
+            <Icon name="close" size={15} />
+            <span>Close</span>
+          </button>
+        }
       >
         <div className="settings-loading-state">
-          <p className="muted">Loading settings…</p>
+          <p className="muted detail-inline-message">
+            <Icon name="settings" size={18} />
+            <span>Loading settings…</span>
+          </p>
           {settingsError && (
             <div className="settings-inline-alert" role="alert">
-              <span>{settingsError}</span>
+              <div className="inline-alert-copy">
+                <Icon name="alert-triangle" size={17} />
+                <span>{settingsError}</span>
+              </div>
               <button type="button" className="link-btn" onClick={onRetrySettings}>
+                <Icon name="refresh" size={14} />
                 Try again
               </button>
             </div>
@@ -447,7 +460,8 @@ export function SettingsDialog({
       footer={
         <>
           <button type="button" className="btn" onClick={cancel} disabled={isSettingsBusy}>
-            Cancel
+            <Icon name="close" size={15} />
+            <span>Cancel</span>
           </button>
           <button
             type="button"
@@ -457,7 +471,8 @@ export function SettingsDialog({
               busy || resetBusy || windowsAccentLoading || editorValidationError !== null || accentValidationError !== null
             }
           >
-            {busy ? "Saving…" : "Save changes"}
+            <Icon name="check-circle" size={15} />
+            <span>{busy ? "Saving…" : "Save changes"}</span>
           </button>
         </>
       }
@@ -465,8 +480,12 @@ export function SettingsDialog({
       <div className="settings-dialog-content">
         {settingsError && (
           <div className="settings-inline-alert" role="alert">
-            <span>{settingsError} The v2 defaults are in use until settings reloads.</span>
+            <div className="inline-alert-copy">
+              <Icon name="alert-triangle" size={17} />
+              <span>{settingsError} The v2 defaults are in use until settings reloads.</span>
+            </div>
             <button type="button" className="link-btn" onClick={onRetrySettings}>
+              <Icon name="refresh" size={14} />
               Try again
             </button>
           </div>
@@ -492,6 +511,7 @@ export function SettingsDialog({
                   onClick={() => changeTab(tab.id)}
                   onKeyDown={(event) => onTabKeyDown(event, index)}
                 >
+                  <Icon name={tab.icon} size={16} />
                   {tab.label}
                 </button>
               );
@@ -563,8 +583,11 @@ export function SettingsDialog({
              aria-labelledby="settings-reset-confirm-title"
              aria-describedby="settings-reset-confirm-description"
            >
-             <div>
-               <h3 id="settings-reset-confirm-title">Reset all settings?</h3>
+             <div className="settings-reset-confirm-copy">
+               <h3 id="settings-reset-confirm-title">
+                 <Icon name="rotate-ccw" size={18} />
+                 <span>Reset all settings?</span>
+               </h3>
                <p id="settings-reset-confirm-description">
                  This resets color, accent, and editor settings. Project records stay untouched.
                </p>
@@ -577,7 +600,10 @@ export function SettingsDialog({
                  onClick={() => setResetConfirmOpen(false)}
                 disabled={resetBusy}
               >
+                <Icon name="close" size={14} />
+                <span>
                 Keep settings
+                </span>
               </button>
               <button
                 type="button"
@@ -585,13 +611,21 @@ export function SettingsDialog({
                 onClick={() => void resetSettings()}
                 disabled={resetBusy}
               >
+                <Icon name="rotate-ccw" size={14} />
+                <span>
                 Reset now
+                </span>
               </button>
             </div>
           </div>
         )}
 
-        {saveError && <p className="settings-error" role="alert">{saveError}</p>}
+        {saveError && (
+          <p className="settings-error settings-inline-message" role="alert">
+            <Icon name="alert-triangle" size={16} />
+            <span>{saveError}</span>
+          </p>
+        )}
       </div>
     </Modal>
   );

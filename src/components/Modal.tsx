@@ -1,6 +1,7 @@
 // 对话框基础件：Modal 壳（Esc / 遮罩关闭）与确认对话框（删除等破坏性操作）。
 
 import { useLayoutEffect, useRef, type ReactNode } from "react";
+import { Icon } from "./Icon";
 
 export function Modal({
   title,
@@ -107,9 +108,10 @@ export function Modal({
               }
             }}
             aria-label="Close"
+            title="Close"
             disabled={closeDisabled}
           >
-            ✕
+            <Icon name="close" size={18} />
           </button>
         </header>
         <div className="modal-body">{children}</div>
@@ -148,10 +150,12 @@ export function ConfirmDialog({
       footer={
         <>
           <button className="btn" onClick={onCancel}>
-            Cancel
+            <Icon name="close" size={15} />
+            <span>Cancel</span>
           </button>
           <button className="btn btn-danger" onClick={onConfirm}>
-            {confirmLabel}
+            <Icon name="trash" size={15} />
+            <span>{confirmLabel}</span>
           </button>
         </>
       }

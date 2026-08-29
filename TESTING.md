@@ -77,10 +77,38 @@
 
 ### Stability
 
-- [x] 启动 / 关闭 / 重复启动 / 连续打开多个项目 / 重复扫描 / 连续 Run / Build 无异常
+- [x] 启动 / 关闭 / 重复启动 / Settings 与 Add Project 重复开关 / 连续打开多个项目 / 重复扫描 / 连续 Run / Build 无异常
 
 ### Production
 
 - [x] `build.bat` 生成版本化绿色目录与 ZIP，ZIP 解压后的 EXE 可启动且窗口正常响应
 - [x] 便携数据契约：设置写入 EXE 同目录 `data\settings.json`，不使用 `%APPDATA%`
 - [x] 绿色 ZIP 内 Project CRUD / 主题持久化 / Run / Build / Open in editor 全流程人工验收
+
+---
+
+## E. Phase 15 自绘 SVG 图标与全页面 UI 审计（2026-08-27）
+
+| 验收项 | 结果 | 证据 / 边界 |
+|---|---|---|
+| 图标注册表与 SVG 契约 | PASS | `Icon.tsx` 使用零依赖、24×24 `currentColor`、圆端/圆角线条；`iconUi.test.ts` 静态契约通过 |
+| 全页面语义接入 | PASS | Dashboard、Sidebar、Card、Detail、Add/Edit/Confirm、Settings 三分页、More 菜单、Toast、空态、错误态、加载态均有语义图标 |
+| icon-only 无障碍名称 | PASS | More、Close、Dismiss 等紧凑控件保留 `aria-label` 与 tooltip；装饰图标默认 `aria-hidden` |
+| 主题与状态表达 | PASS | Light / Dark / Follow system、强调色预览及 Git clean / modified / unknown 的形状 + 颜色均完成真实窗口复核 |
+| 键盘焦点与命中区 | PASS | 搜索、Add project、卡片标题、More 菜单等真实 Tauri 窗口路径均观察到可见焦点环；icon-only 目标保持 32px 命中区 |
+| 响应式几何与文本收缩 | PASS | 静态 Vite 页面在 320 / 768 / 1024 / 1440 宽度下 `scrollWidth` 与 viewport 一致；Modal、Settings、菜单和长文本无水平溢出或图标重叠 |
+| 真实 Tauri 交互窗口 | PASS | 默认开发窗口约 802×631，完成 Dashboard、Detail、Add/Edit/Confirm、More、Settings、Toast/错误路径交互复核；未将原生拖拽缩放失败冒充为多尺寸证据 |
+| reduced-motion | PASS | 保留既有 `prefers-reduced-motion` 规则，并由静态契约测试断言；本轮未声称有独立 runtime 动画截图 |
+
+> 尺寸边界：320 / 768 / 1024 / 1440 的数值几何来自同一 Vite 页面静态浏览器检查；真实 Tauri 只记录默认窗口交互结果。图标审计不改变 Rust、IPC、持久化或命令契约。
+
+### E.1 图标细节 follow-up（2026-08-28）
+
+- Card / Detail 的 Open、Run、Build 图标统一使用 16px 盒、固定文字行高与上下居中规则。
+- `hammer` glyph 已替换为用户指定的 1024×1024 填充 path，按 `scale(0.0234375)` 归一到 24×24，并使用 `currentColor` / `stroke="none"` 保持主题适配。
+- 本次按需求未启动实机窗口；`build.bat` 与静态 `pnpm test`（7 个文件 / 69 个测试）通过，产物见 `build\\win-unpacked\\windy-project-mgr.exe`。
+
+### E.2 Git 扫描控制台窗口回归（2026-08-28）
+
+- [x] 绿色 EXE 通过 `D:\Dev\opia-rss-reader` 完成 Add Project；Step 2 列出 `start.bat`、`build.bat`、`build.ps1`，提交后卡片正常出现并完成扫描。
+- [x] 绿色 EXE 在 Detail 页执行 Refresh；Add Project 阶段所有观测 Git 子进程均为 `hwnd=0`，Refresh 观察 3 秒无新增顶层窗口和错误文案；验证后清理本次写入的项目记录及应用进程。

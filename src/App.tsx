@@ -9,6 +9,7 @@ import { AddProjectDialog } from "./components/AddProjectDialog";
 import { EditProjectDialog } from "./components/EditProjectDialog";
 import { SettingsDialog } from "./components/SettingsDialog";
 import { ConfirmDialog } from "./components/Modal";
+import { Icon } from "./components/Icon";
 import { filterProjects } from "./lib/search";
 import {
   buildProject,
@@ -286,32 +287,40 @@ function App() {
         ) : (
           <>
             <div className="toolbar">
-              <input
-                className="search"
-                type="search"
-                placeholder="Search name, description, tag or path"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                aria-label="Search projects"
-              />
+              <label className="search-field">
+                <Icon name="search" size={17} />
+                <input
+                  className="search"
+                  type="search"
+                  placeholder="Search name, description, tag or path"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  aria-label="Search projects"
+                />
+              </label>
               <button className="btn btn-primary" onClick={() => setDialog({ kind: "add" })}>
-                Add project
+                <Icon name="plus" size={17} />
+                <span>Add project</span>
               </button>
             </div>
 
             {loadError ? (
               <div className="empty-state">
+                <Icon name="alert-triangle" size={30} className="empty-state-icon" />
                 <p>Could not load projects: {loadError}</p>
               </div>
             ) : projects.length === 0 ? (
               <div className="empty-state">
+                <Icon name="folder-plus" size={30} className="empty-state-icon" />
                 <p>No projects yet.</p>
                 <button className="btn btn-primary" onClick={() => setDialog({ kind: "add" })}>
-                  Add your first project
+                  <Icon name="plus" size={17} />
+                  <span>Add your first project</span>
                 </button>
               </div>
             ) : visible.length === 0 ? (
               <div className="empty-state">
+                <Icon name="search" size={30} className="empty-state-icon" />
                 <p>Nothing matches your search.</p>
               </div>
             ) : (
@@ -389,9 +398,10 @@ function App() {
 
       {toast && (
         <div className="toast" role="alert">
-          {toast}
-          <button className="icon-btn" aria-label="Dismiss" onClick={() => setToast(null)}>
-            ✕
+          <Icon name="alert-triangle" size={18} />
+          <span className="toast-message">{toast}</span>
+          <button className="icon-btn" aria-label="Dismiss" title="Dismiss" onClick={() => setToast(null)}>
+            <Icon name="close" size={17} />
           </button>
         </div>
       )}

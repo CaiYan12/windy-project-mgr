@@ -6,7 +6,7 @@
 
 ## 0. 执行进度追踪（Checkbox）
 
-> **执行进度：15 / 15 Phase 完成 · 34 / 34 子任务（最后更新：2026-08-27；最终人工验收已完成，MVP 交付闭环）**
+> **执行进度：16 / 16 Phase 完成 · 37 / 37 子任务（最后更新：2026-08-28；Phase 15 图标细节与 Git 扫描窗口回归修复已完成并生成 build 产物，MVP 交付闭环）**
 
 ### Phase 0 环境审计
 
@@ -87,6 +87,14 @@
 - [x] Functional / Error Handling / UX / Stability / Production 全部通过（原始第 25 节；最终人工验收由用户完成）
 - [x] 5 条增量验收项全部通过（本文档第 7 节；最终人工验收由用户完成）
 - [x] 顶部“执行进度”更新为 15 / 15，MVP 宣布完成
+
+### Phase 15 自绘 SVG 图标系统与全页面 UI 审计
+
+- [x] 建立零依赖自绘 SVG `Icon` 注册表并接入 Dashboard、Detail、Card、Dialog、Settings、Toast、空态、错误态与加载态
+- [x] 完成亮 / 暗 / 跟随系统与强调色适配、Git 状态形状与颜色双重表达、焦点命中区、长文本收缩和 320 / 768 / 1024 / 1440 静态响应式几何审计
+- [x] 完成图标静态契约测试、真实 Tauri 默认窗口交互复核、`pnpm test`、`pnpm build`、`git diff --check` 验证并同步交付文档；2026-08-28 按需求采用指定 1024×1024 Build path，归一到 24×24 / `currentColor` 并通过 `build.bat`
+
+> 2026-08-28 维护修复（不新增 Phase / 子任务）：Git 扫描的 Windows 子进程统一使用 `CREATE_NO_WINDOW`；真实绿色 EXE 的 Add Project 观察到 Git 子进程均为 `hwnd=0`，Detail Refresh 的 3 秒 UIA 观察无新增顶层窗口，新增回归测试已完成红→绿。
 
 ---
 

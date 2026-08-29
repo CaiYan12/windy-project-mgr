@@ -4,6 +4,7 @@
 // 最近一次浏览目录记入 localStorage，下次打开定位到该处。
 
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
+import { Icon } from "./Icon";
 
 /** localStorage 键：最近一次浏览的目录（供 Browse… 默认定位）。 */
 const LAST_BROWSE_KEY = "windy:last-browse-dir";
@@ -55,7 +56,10 @@ export function ProjectFields({
   return (
     <div className="form-grid">
       <label className="field">
-        <span className="field-label">Path</span>
+        <span className="field-label">
+          <Icon name="folder-open" size={15} />
+          <span>Path</span>
+        </span>
         <div className="field-row">
           <input
             value={state.path}
@@ -64,14 +68,18 @@ export function ProjectFields({
             autoFocus
           />
           <button type="button" className="btn small" onClick={browsePath}>
-            Browse…
+            <Icon name="folder-open" size={14} />
+            <span>Browse…</span>
           </button>
         </div>
       </label>
 
       <label className="field">
         <span className="field-label">
+          <Icon name="text" size={15} />
+          <span>
           Name{nameAutoHint ? " (auto-filled from path)" : ""}
+          </span>
         </span>
         <input
           value={state.name}
@@ -80,7 +88,10 @@ export function ProjectFields({
       </label>
 
       <label className="field">
-        <span className="field-label">Description</span>
+        <span className="field-label">
+          <Icon name="align-left" size={15} />
+          <span>Description</span>
+        </span>
         <input
           value={state.description}
           onChange={(e) => onChange({ description: e.target.value })}
@@ -88,7 +99,10 @@ export function ProjectFields({
       </label>
 
       <label className="field">
-        <span className="field-label">Tags (comma-separated)</span>
+        <span className="field-label">
+          <Icon name="tag" size={15} />
+          <span>Tags (comma-separated)</span>
+        </span>
         <input
           value={state.tagsText}
           onChange={(e) => onChange({ tagsText: e.target.value })}
@@ -99,7 +113,10 @@ export function ProjectFields({
       {showCommands && (
         <>
           <label className="field">
-            <span className="field-label">Run command</span>
+            <span className="field-label">
+              <Icon name="terminal" size={15} />
+              <span>Run command</span>
+            </span>
             <input
               value={state.runCommand}
               onChange={(e) => onChange({ runCommand: e.target.value })}
@@ -108,7 +125,10 @@ export function ProjectFields({
           </label>
 
           <label className="field">
-            <span className="field-label">Build command</span>
+            <span className="field-label">
+              <Icon name="hammer" size={15} />
+              <span>Build command</span>
+            </span>
             <input
               value={state.buildCommand}
               onChange={(e) => onChange({ buildCommand: e.target.value })}

@@ -5,8 +5,13 @@
 //! status 三态 clean / modified / unknown。非仓库目录返回 `Ok(None)`，
 //! git 不可用 / 路径不存在返回可诊断错误，不导致应用崩溃。
 
+#[cfg(windows)]
+use std::os::windows::process::CommandExt;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+
+#[cfg(windows)]
+const CREATE_NO_WINDOW: u32 = 0x0800_0000;
 
 /// Git 扫描错误：必须可诊断，不得导致应用崩溃。
 #[derive(Debug)]
@@ -107,7 +112,11 @@ struct GitOutput {
 }
 
 fn run_git(git_bin: &str, cwd: &Path, args: &[&str]) -> Result<GitOutput, GitError> {
-    let out = Command::new(git_bin)
+    let mut command = Command::new(git_bin);
+    #[cfg(windows)]
+    command.creation_flags(CREATE_NO_WINDOW);
+
+    let out = command
         .arg("-C")
         .arg(cwd)
         .args(args)
@@ -206,4 +215,22 @@ fn detect_ahead_behind(git_bin: &str, path: &Path) -> (u32, u32) {
     let behind = parts.next().and_then(|n| n.parse().ok()).unwrap_or(0);
     let ahead = parts.next().and_then(|n| n.parse().ok()).unwrap_or(0);
     (ahead, behind)
+}
+
+#[cfg(test)]
+mod tests {
+    #[cfg(windows)]
+    #[test]
+    fn git_scanner_hides_windows_console_processes() {
+        let source = include_str!("mod.rs");
+        let command_ext_import = ["use std::os::windows::process::", "CommandExt;"].concat();
+        let no_window_constant = ["const CREATE_", "NO_WINDOW: u32"].concat();
+        let creation_flag_call = ["command", ".creation_flags(", "CREATE_", "NO_WINDOW);"].concat();
+        assert!(
+            source.contains(&command_ext_import)
+                && source.contains(&no_window_constant)
+                && source.contains(&creation_flag_call),
+            "Git child processes must opt out of visible Windows console windows"
+        );
+    }
 }

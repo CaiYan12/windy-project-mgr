@@ -1,5 +1,6 @@
 import type { EditorProfile, DetectedEditor } from "../lib/api";
 import { shouldShowCustomExecutable } from "../lib/settingsUi";
+import { Icon } from "./Icon";
 
 interface SettingsEditorPanelProps {
   profile: EditorProfile;
@@ -43,6 +44,7 @@ export function SettingsEditorPanel({
         <div className="settings-section-heading">
           <div>
             <h3 id="settings-editor-choice-title" className="settings-section-title">
+              <Icon name="code" size={18} />
               Editor application
             </h3>
             <p className="settings-section-description">
@@ -60,6 +62,9 @@ export function SettingsEditorPanel({
               aria-pressed={profile.executable.trim() === ""}
               onClick={() => onSelectExecutable("")}
             >
+              <span className="settings-editor-choice-icon" aria-hidden="true">
+                <Icon name="ban" size={18} />
+              </span>
               <span className="settings-editor-choice-main">
                 <strong>Not configured</strong>
                 <span className="settings-editor-path">Open in editor stays unavailable.</span>
@@ -75,6 +80,9 @@ export function SettingsEditorPanel({
                 aria-pressed={profile.executable.trim() !== ""}
                 onClick={() => onSelectExecutable(profile.executable)}
               >
+                <span className="settings-editor-choice-icon" aria-hidden="true">
+                  <Icon name="folder-open" size={18} />
+                </span>
                 <span className="settings-editor-choice-main">
                   <strong>Custom executable</strong>
                   <span className="settings-editor-path mono" title={profile.executable}>
@@ -97,6 +105,9 @@ export function SettingsEditorPanel({
                 aria-pressed={profile.executable.toLowerCase() === editor.executable.toLowerCase()}
                 onClick={() => onSelectExecutable(editor.executable)}
               >
+                <span className="settings-editor-choice-icon" aria-hidden="true">
+                  <Icon name="code" size={18} />
+                </span>
                 <span className="settings-editor-choice-main">
                   <strong>{editor.name}</strong>
                   <span className="settings-editor-path mono" title={editor.executable}>
@@ -111,15 +122,20 @@ export function SettingsEditorPanel({
 
         <div className="settings-editor-actions">
           <button type="button" className="btn small" onClick={onChooseOther}>
-            Other…
+            <Icon name="folder-open" size={14} />
+            <span>Other…</span>
           </button>
           <span className="settings-hint">Only .exe files can be selected here.</span>
         </div>
 
         {error && (
           <div className="settings-inline-alert" role="alert">
-            <span>{error}</span>
+            <div className="inline-alert-copy">
+              <Icon name="alert-triangle" size={17} />
+              <span>{error}</span>
+            </div>
             <button type="button" className="link-btn" onClick={onRetry}>
+              <Icon name="refresh" size={14} />
               Try again
             </button>
           </div>
@@ -133,6 +149,7 @@ export function SettingsEditorPanel({
         <div className="settings-section-heading">
           <div>
             <h3 id="settings-editor-arguments-title" className="settings-section-title">
+              <Icon name="terminal" size={18} />
               Launch arguments
             </h3>
             <p className="settings-section-description">
@@ -141,7 +158,8 @@ export function SettingsEditorPanel({
           </div>
         </div>
         <label className="settings-field-label" htmlFor="settings-editor-arguments">
-          Arguments
+          <Icon name="align-left" size={15} />
+          <span>Arguments</span>
         </label>
         <textarea
           id="settings-editor-arguments"
@@ -157,8 +175,9 @@ export function SettingsEditorPanel({
           {"{path}"} is replaced with the project folder, so the editor opens that folder as its workspace.
         </p>
         {validationError && (
-          <p id="settings-editor-validation-error" className="settings-error" role="alert">
-            {validationError}
+          <p id="settings-editor-validation-error" className="settings-error settings-inline-message" role="alert">
+            <Icon name="alert-triangle" size={15} />
+            <span>{validationError}</span>
           </p>
         )}
       </section>

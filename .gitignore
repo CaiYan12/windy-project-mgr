@@ -21,6 +21,8 @@ dist-ssr
 /.qoder/
 /.trae/
 /testpics/
+/.playwright-cli/
+/.mimosa/
 
 # Editor directories and files
 .vscode/*
