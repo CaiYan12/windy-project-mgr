@@ -445,28 +445,75 @@ impl EditorProfile {
         if self.executable.trim().is_empty() {
             return Ok(());
         }
+        match self.placeholder_rule_violation() {
+            Some(detail) => Err(StoreError::Validation { detail }),
+            None => Ok(()),
+        }
+    }
 
+    /// 占位符 / 批处理引号规则的唯一实现：合法返回 `None`，否则返回可诊断详情。
+    /// `validate()` 与 `resolve_arguments()` 共用，避免规则在多处漂移（A3 / B2）。
+    fn placeholder_rule_violation(&self) -> Option<String> {
         let placeholder_count: usize = self
             .arguments
             .iter()
             .map(|arg| arg.matches(DEFAULT_PATH_PLACEHOLDER).count())
             .sum();
-        if placeholder_count == 1 {
-            if is_batch_executable(&self.executable)
-                && self.arguments.iter().any(|argument| argument.contains('"'))
-            {
-                return Err(StoreError::Validation {
-                    detail: "cmd.exe batch arguments cannot contain the double quote character"
-                        .to_string(),
-                });
-            }
-            Ok(())
-        } else {
-            Err(StoreError::Validation {
-                detail: "editor.arguments must contain exactly one {path} placeholder when editor.executable is configured".to_string(),
-            })
+        if placeholder_count != 1 {
+            return Some(
+                "editor.arguments must contain exactly one {path} placeholder when editor.executable is configured"
+                    .to_string(),
+            );
         }
+        if is_batch_executable(&self.executable) {
+            if let Some(detail) = batch_quote_violation(&self.arguments) {
+                return Some(detail);
+            }
+        }
+        None
     }
+
+    /// 启动参数解算（B2）：替换唯一 `{path}` 占位符并校验批处理约束。
+    /// 这是该规则在后端唯一的执行入口；`launch` 只负责把结果组装成 `LaunchPlan`。
+    pub fn resolve_arguments(&self, path: &Path) -> Result<Vec<String>, EditorProfileError> {
+        if self.executable.trim().is_empty() {
+            return Err(EditorProfileError::NotConfigured);
+        }
+        if let Some(detail) = self.placeholder_rule_violation() {
+            return Err(EditorProfileError::Invalid { detail });
+        }
+        let path_string = path.display().to_string();
+        let substituted: Vec<String> = self
+            .arguments
+            .iter()
+            .map(|argument| argument.replacen(DEFAULT_PATH_PLACEHOLDER, &path_string, 1))
+            .collect();
+        // 保留旧 launch 的语义：批处理命令的**替换后**参数同样不得含双引号
+        //（例如项目路径本身含引号时）。
+        if is_batch_executable(&self.executable) {
+            if let Some(detail) = batch_quote_violation(&substituted) {
+                return Err(EditorProfileError::Invalid { detail });
+            }
+        }
+        Ok(substituted)
+    }
+}
+
+/// 批处理参数引号规则（B2）：参数中不得含双引号。
+/// `validate` 检查原始参数，`resolve_arguments` 检查替换后的参数。
+fn batch_quote_violation(arguments: &[String]) -> Option<String> {
+    if arguments.iter().any(|argument| argument.contains('"')) {
+        Some("cmd.exe batch arguments cannot contain the double quote character".to_string())
+    } else {
+        None
+    }
+}
+
+/// 编辑器配置解算错误（B2）：区分「未配置」与「配置非法」。
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum EditorProfileError {
+    NotConfigured,
+    Invalid { detail: String },
 }
 
 pub fn is_batch_executable(executable: &str) -> bool {

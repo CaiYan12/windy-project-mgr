@@ -3,8 +3,8 @@
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicU64, Ordering};
 use windy_project_mgr_lib::commands::project::{
-    create_project_in, delete_project_in, get_project_in, get_projects_in, update_project_in,
-    portable_data_dir, CreateProjectInput,
+    check_path_available_in, create_project_in, delete_project_in, get_project_in,
+    get_projects_in, update_project_in, portable_data_dir, CreateProjectInput, PathAvailability,
 };
 use windy_project_mgr_lib::project::{Project, StoreError};
 
@@ -112,6 +112,46 @@ fn create_rejects_duplicate_path_variants() {
     }
 
     assert_eq!(get_projects_in(&dir).expect("list").len(), 1, "no record added");
+    cleanup(&dir);
+}
+
+#[test]
+fn create_rejects_relative_path() {
+    let dir = temp_data_dir("relative");
+    let err = create_project_in(&dir, input("rel", "projects\\alpha"))
+        .expect_err("relative path must be rejected");
+    assert!(matches!(err, StoreError::Validation { .. }), "got: {err:?}");
+    assert!(get_projects_in(&dir).expect("list").is_empty());
+    cleanup(&dir);
+}
+
+#[test]
+fn check_path_available_reports_conflict_excludes_self_and_flags_relative() {
+    let dir = temp_data_dir("check-available");
+    let created = create_project_in(&dir, input("alpha", "D:\\projects\\alpha")).expect("create");
+
+    assert_eq!(
+        check_path_available_in(&dir, "D:\\projects\\beta", None).expect("query"),
+        PathAvailability::Available,
+        "unused absolute path must be available"
+    );
+    assert_eq!(
+        check_path_available_in(&dir, "d:/PROJECTS/alpha/", None).expect("query"),
+        PathAvailability::Duplicate {
+            path: "D:\\projects\\alpha".to_string()
+        }
+    );
+    assert_eq!(
+        check_path_available_in(&dir, "D:\\projects\\alpha", Some(created.id.as_str()))
+            .expect("query"),
+        PathAvailability::Available,
+        "editing a record must not conflict with itself"
+    );
+    assert_eq!(
+        check_path_available_in(&dir, "src-tauri\\src", None).expect("query"),
+        PathAvailability::NotAbsolute,
+        "relative path must be flagged before existence is considered"
+    );
     cleanup(&dir);
 }
 

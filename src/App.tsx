@@ -35,6 +35,7 @@ import {
 } from "./lib/theme";
 import { createRequestGeneration } from "./lib/settingsUi";
 import { DEFAULT_APPEARANCE, type AppearanceSettings } from "./lib/appearance";
+import { DEFAULT_SETTINGS } from "./lib/settings";
 import type { Project, ScanState } from "./types/project";
 import "./App.css";
 
@@ -50,13 +51,6 @@ type SettingsPreview = {
   accentColor: AppSettings["accentColor"];
   windowsAccentColor: string | null;
   appearance: AppearanceSettings;
-};
-
-const DEFAULT_SETTINGS: AppSettings = {
-  colorMode: "system",
-  accentColor: { kind: "preset", value: "windy-teal" },
-  appearance: DEFAULT_APPEARANCE,
-  editor: { executable: "", arguments: ["{path}"] },
 };
 
 function App() {
@@ -370,11 +364,7 @@ function App() {
       </main>
 
       {dialog?.kind === "add" && (
-        <AddProjectDialog
-          projects={projects}
-          onClose={() => setDialog(null)}
-          onCreated={handleCreated}
-        />
+        <AddProjectDialog onClose={() => setDialog(null)} onCreated={handleCreated} />
       )}
       {dialog?.kind === "edit" && (
         <EditProjectDialog

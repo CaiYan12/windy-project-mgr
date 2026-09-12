@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { invoke } from "@tauri-apps/api/core";
 import {
+  checkPathAvailable,
   detectEditors,
   getAppInfo,
   getSettings,
@@ -43,6 +44,19 @@ describe("settings v3 IPC wrappers", () => {
 
     await expect(updateSettings(settings)).resolves.toEqual(settings);
     expect(invoke).toHaveBeenCalledWith("update_settings", { settings });
+  });
+
+  it("uses the exact check_path_available command and camelCase argument", async () => {
+    vi.mocked(invoke).mockResolvedValue({ status: "duplicate", path: "D:\\projects\\alpha" });
+
+    await expect(checkPathAvailable("D:\\projects\\beta", "p1")).resolves.toEqual({
+      status: "duplicate",
+      path: "D:\\projects\\alpha",
+    });
+    expect(invoke).toHaveBeenCalledWith("check_path_available", {
+      path: "D:\\projects\\beta",
+      excludeId: "p1",
+    });
   });
 
   it("uses the exact system command names and Rust wire fields", async () => {

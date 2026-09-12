@@ -4,10 +4,11 @@ Current Phase:
 Phase 16（post-MVP）— 2026-08-30 结构级 UI 焕新（网易云语法）+ 主题工坊（settings v3）+ 自绘滚动条完成并验收
 
 Status:
-PASS — Phase 0~15 全部完成；2026-08-30 UI 焕新 + settings v3 主题工坊已通过 vitest 87 / cargo 155 / build / 四档宽度亮暗视觉验收
+ATTENTION — Phase 0~15 全部完成；2026-08-30 UI 焕新 + settings v3 主题工坊已通过 vitest 87 / cargo 155 / build / 四档宽度亮暗视觉验收；2026-09-12 真实窗口 A–G 清单已执行，B3 修复后定向复测通过，A1 首帧骨架未留证，G3 受约束未检查
 
 Completed:
 - 2026-08-30 结构级 UI 焕新 + 主题工坊：设计令牌重构（新中性色板 / 三档阴影 / 动效令牌 120-180-280ms）、胶囊选中态侧栏、封面式卡片头 + Detail 瓷贴、详情页 hero 化、16px 对话框 + 背景 blur、底部居中深色 toast；settings v3 `appearance` 域（风格预设包 windy/cloud/ink/midnight、圆角 0-20、字号 13-16、密度、正文字体栈、另存自定义主题）经 `src/lib/appearance.ts`（14 vitest）与 Rust v1/v2→v3 迁移（5 新测试，未新增命令）落地；新增自绘滚动条（`--sb-thumb` 由 `--muted` 派生，亮暗自动适配，用户要求）。验收修复三缺陷：卡片网格行塌缩（`grid-auto-rows: max-content`）、操作区悬停藏起致死白（改常显）、同行卡片操作行不贴底（`.card-body` flex 伸展）。验证：vitest 8 文件 87 测试、cargo 155/155、`pnpm build` 通过；静态预览（IPC mock）320/768/1024/1440 亮暗零溢出，Dashboard/Detail/Settings/CJK 换行/降级态复核。
+- 2026-09-12 B3 修复后定向真实窗口复测：Add Dialog 的 B2 `.\app` 与 B3 `src-tauri\src` 均在 Step 1 显示 `path must be absolute: <输入>`，未进入 Step 2，后台项目数保持 3；关闭弹窗后停止本次开发进程，未新增测试记录。
 - 2026-08-28 Git 扫描窗口回归修复：定位 `scan_project` 在 Git 仓库中串行调用 6 次系统 Git CLI 时未设置 `CREATE_NO_WINDOW`，导致绿色 EXE 添加项目后闪现控制台窗口；新增 Windows 子进程契约测试并完成红→绿。真实绿色 EXE 通过 `D:\Dev\opia-rss-reader` Add Project 与 Detail Refresh，Add 后卡片在 266.9ms 出现且所有观测 Git 子进程均为 `hwnd=0`，Refresh 返回 40.0ms 且 3 秒 UIA 监控无新增顶层窗口；验证数据已清理。
 - 2026-08-28 图标细节修复：Card / Detail 动作按钮统一 16px 图标盒、固定行高与上下居中；将 hammer 替换为用户指定的 1024×1024 填充 path，按 `scale(0.0234375)` 归一到 24×24，并使用 `currentColor` / `stroke="none"`。按用户要求未启动实机；`build.bat` 与随后静态 `pnpm test`（7 个文件 / 69 个测试）均通过；产物为 `build\\win-unpacked\\windy-project-mgr.exe`（9,881,088 bytes）。
 - 2026-08-27 Phase 15 图标系统与 UI 审计：新增零依赖自绘 `src/components/Icon.tsx` 与 `src/lib/iconUi.test.ts`，接入全页面语义图标；完成主题 / 强调色、Git 状态形状 + 颜色、焦点命中区、长文本收缩和 reduced-motion 契约复核。静态 Vite 页面在 320 / 768 / 1024 / 1440 下无水平溢出；真实 Tauri 默认窗口完成 Dashboard、More、Add/Edit/Confirm、Detail、Settings、Toast/错误路径复核。响应式数值尺寸未冒充原生 Tauri 拖拽缩放结果。
@@ -35,7 +36,8 @@ In Progress:
 - None
 
 Blocked:
-- None
+- 2026-09-12 A1 startup skeleton evidence: the real app reached the populated Dashboard before the first available screenshot on both launch attempts; no startup skeleton frame was captured, so that sub-check is not claimed.
+- 2026-09-12 G3 `%APPDATA%` directory check: not performed because the user explicitly forbade reading or writing `%APPDATA%`.
 
 Tests:
 - Passed: cargo 155/155（2026-08-30 full run；150 基线 + settings v3 迁移 / appearance 校验 5 个新测试）；vitest 87/87（8 个文件；69 基线 + `src/lib/appearance.ts` 14 个 + theme/cards/api/icon 扩展断言，2026-08-30）
@@ -53,7 +55,7 @@ Known Issues:
 - `%USERPROFILE%\.cargo\bin` 已加入用户 PATH，但当前会话已打开的 shell 不会自动刷新；验证时使用全路径，新开终端可直接使用 `rustc` / `cargo`
 
 Next Step:
-- Git 扫描窗口回归修复已完成，`build\\win-unpacked` 与版本化 ZIP 已生成；无未完成代码工作
+- Git 扫描窗口回归修复已完成，`build\\win-unpacked` 与版本化 ZIP 已生成；2026-09-12 A–G 真实窗口验收已完成，B3 修复并经定向复测通过；A1/G3 边界见 Blocked，开发进程已停止
 
 ---
 

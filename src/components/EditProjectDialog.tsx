@@ -1,10 +1,11 @@
 // Edit Dialog（D10 单步）：可编辑全部字段（含 runCommand / buildCommand）。
+// 路径查重以后端为唯一事实源（ADR 0007），保存前调用 `checkPathAvailable` 预校验。
 
 import { useState } from "react";
 import { Modal } from "./Modal";
 import { Icon } from "./Icon";
 import { parseTags, ProjectFields, type ProjectFormState } from "./ProjectFields";
-import { updateProject } from "../lib/api";
+import { checkPathAvailable, updateProject } from "../lib/api";
 import type { Project } from "../types/project";
 
 export function EditProjectDialog({
@@ -33,16 +34,26 @@ export function EditProjectDialog({
 
   async function save() {
     setError(null);
-    if (!form.path.trim() || !form.name.trim()) {
+    const path = form.path.trim();
+    if (!path || !form.name.trim()) {
       setError("Path and name are required.");
       return;
     }
     setBusy(true);
     try {
+      const availability = await checkPathAvailable(path, project.id);
+      if (availability.status === "notAbsolute") {
+        setError(`path must be absolute: ${path}`);
+        return;
+      }
+      if (availability.status === "duplicate") {
+        setError(`duplicate project path: ${availability.path} (edit the existing record instead)`);
+        return;
+      }
       const updated = await updateProject({
         ...project,
         name: form.name.trim(),
-        path: form.path.trim(),
+        path,
         description: form.description.trim() || undefined,
         tags: parseTags(form.tagsText),
         runCommand: form.runCommand.trim() || undefined,

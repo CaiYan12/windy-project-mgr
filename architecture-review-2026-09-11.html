@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Windy Project Manager · 全局架构巡检报告 (2026-09-11)</title>
+<style>
+  :root{
+    --bg:#0f1216; --panel:#161b22; --panel2:#1c232c; --line:#2a323d; --ink:#e6ebf2;
+    --muted:#9aa6b4; --accent:#2fb3c4; --accent2:#7c5cff;
+    --high:#e5484d; --med:#e0a336; --low:#57b26a; --info:#5b8def;
+    --mono:'Cascadia Code',Consolas,'SFMono-Regular',Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:'Segoe UI','Microsoft YaHei',system-ui,-apple-system,sans-serif;
+    line-height:1.65;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1120px;margin:0 auto;padding:48px 28px 96px}
+  h1{font-size:30px;margin:0 0 6px;letter-spacing:.2px}
+  h2{font-size:21px;margin:44px 0 14px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+  h3{font-size:16px;margin:0 0 6px}
+  p{margin:8px 0}
+  a{color:var(--accent)}
+  code,.mono{font-family:var(--mono);font-size:12.5px}
+  code{background:#0b0e12;border:1px solid var(--line);border-radius:4px;padding:1px 6px;color:#b8e6ef}
+  .sub{color:var(--muted);font-size:14px}
+  .lead{font-size:15px;color:#c8d2de;max-width:80ch}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:22px 0 6px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+  .stat .n{font-size:26px;font-weight:700;color:var(--accent)}
+  .stat .l{font-size:12.5px;color:var(--muted);margin-top:2px}
+  .stat .n.ok{color:var(--low)}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin:16px 0}
+  .card.def{border-left:4px solid var(--line)}
+  .card.def.high{border-left-color:var(--high)}
+  .card.def.med{border-left-color:var(--med)}
+  .card.def.low{border-left-color:var(--low)}
+  .card.def.info{border-left-color:var(--info)}
+  .badge{display:inline-block;font-size:11.5px;font-weight:700;letter-spacing:.4px;
+    text-transform:uppercase;padding:3px 9px;border-radius:999px;border:1px solid}
+  .b-high{color:#ffb4b6;border-color:#5a2a2c;background:#2a1416}
+  .b-med{color:#ffdca3;border-color:#5a4520;background:#2a2113}
+  .b-low{color:#b4e6bf;border-color:#295a35;background:#132a19}
+  .b-info{color:#b9ccff;border-color:#2a3a5a;background:#131a2a}
+  .b-strong{color:#b4e6bf;border-color:#295a35;background:#132a19}
+  .b-worth{color:#ffdca3;border-color:#5a4520;background:#2a2113}
+  .b-spec{color:#c8c2ff;border-color:#3a2a5a;background:#1a132a}
+  .head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;flex-wrap:wrap}
+  .files{font-family:var(--mono);font-size:12px;color:#8fb7c9;margin:10px 0 4px;
+    background:#0b0e12;border:1px dashed var(--line);border-radius:8px;padding:8px 12px}
+  .files span{display:inline-block;margin-right:14px;white-space:nowrap}
+  .kv{margin:10px 0 0}
+  .kv b{color:#cfd9e5;font-size:13px}
+  .kv p{color:#c2ccd8;font-size:13.5px;margin:4px 0 10px}
+  .mrow{display:grid;grid-template-columns:1fr 60px 1fr;gap:0;align-items:stretch;
+    border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-top:14px;background:#0b0e12}
+  .mrow .col{padding:14px 16px;font-size:12.5px}
+  .mrow .mid{display:flex;align-items:center;justify-content:center;color:var(--muted);
+    font-size:20px;background:#0f1318;border-left:1px solid var(--line);border-right:1px solid var(--line)}
+  .mrow .ttl{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:8px}
+  .before .ttl{color:#e0a336}.after .ttl{color:#57b26a}
+  .node{display:inline-block;border:1px solid var(--line);border-radius:7px;padding:6px 10px;margin:3px 0;
+    background:var(--panel2);font-family:var(--mono);font-size:11.5px}
+  .node.bad{border-color:#5a2a2c;background:#241214;color:#ffb4b6}
+  .node.good{border-color:#295a35;background:#122417;color:#b4e6bf}
+  .stack{display:flex;flex-direction:column;gap:6px}
+  .arrow{text-align:center;color:var(--muted);font-size:12px}
+  .toc{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 22px;margin:20px 0}
+  .toc a{display:block;padding:3px 0;font-size:13.5px;text-decoration:none}
+  .toc a:hover{color:#fff}
+  .tag{font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:1px 7px;margin-left:6px}
+  .top{background:linear-gradient(180deg,#17262b,#141a20);border:1px solid #23525b;border-radius:14px;padding:22px 24px;margin-top:18px}
+  footer{margin-top:56px;color:var(--muted);font-size:12.5px;border-top:1px solid var(--line);padding-top:16px}
+  ul{margin:6px 0;padding-left:20px}li{margin:3px 0}
+  .pill{display:inline-block;font-size:11.5px;color:var(--muted);background:#0b0e12;border:1px solid var(--line);
+    border-radius:999px;padding:2px 10px;margin:2px 4px 2px 0;font-family:var(--mono)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Windy Project Manager · 全局架构巡检报告</h1>
+  <p class="sub">巡检时间 2026-09-11 · 范围 <code>src/</code> + <code>src-tauri/src/</code> · 基于 commit <code>deb0fd4</code></p>
+
+  <p class="lead">对全仓库做了一次证据驱动的巡检：先跑通门禁（TypeScript 类型检查、前端 87 项测试、Rust 155 项测试），再人工通读后端 9 个模块与前端 12 个组件，按「代码坏味道 / 架构偏离 / 逻辑漏洞 / 过度设计」四类归类。整体结论：<b>工程纪律很好</b>（注释规范、错误可诊断、测试覆盖高），主要问题集中在<b>跨语言规则的重复定义</b>与<b>两个过大模块</b>上，没有发现会导致崩溃或数据损坏的活跃缺陷。</p>
+
+  <div class="grid">
+    <div class="stat"><div class="n ok">0</div><div class="l">TypeScript 类型错误 (tsc --noEmit)</div></div>
+    <div class="stat"><div class="n ok">87 / 87</div><div class="l">前端测试通过 (vitest)</div></div>
+    <div class="stat"><div class="n ok">155 / 155</div><div class="l">Rust 测试通过 (cargo test)</div></div>
+    <div class="stat"><div class="n">1</div><div class="l">高优先级架构问题</div></div>
+    <div class="stat"><div class="n">4</div><div class="l">中优先级问题</div></div>
+    <div class="stat"><div class="n">7</div><div class="l">低优先级 / 硬化项</div></div>
+  </div>
+
+  <div class="toc">
+    <b style="font-size:13px">目录</b>
+    <a href="#a">A. 缺陷与风险（Defects &amp; Risks）</a>
+    <a href="#b">B. 架构深化机会（Deepening Opportunities）</a>
+    <a href="#top">C. 首要建议（Top Recommendation）</a>
+  </div>
+
+  <!-- ============ PART A ============ -->
+  <h2 id="a">A. 缺陷与风险</h2>
+  <p class="sub">按「会不会造成用户可见错误」排序，而非按文件顺序。每条含证据、影响与修复方向。</p>
+
+  <!-- A1 -->
+  <div class="card def med">
+    <div class="head">
+      <div><h3>A1 · 存储层「读-改-写」无单一写者，存在丢失更新风险</h3></div>
+      <span class="badge b-med">Medium · 潜在正确性</span>
+    </div>
+    <div class="files"><span>src-tauri/src/project/store.rs</span><span>src-tauri/src/commands/project.rs</span><span>src-tauri/src/commands/actions.rs</span><span>src-tauri/src/lib.rs</span></div>
+    <div class="kv">
+      <b>问题</b>
+      <p>每个写命令（create / update / delete / update_settings）都独立执行 <code>Store::load(磁盘) → 改内存 → Store::save(磁盘)</code>。Tauri 命令在线程池里并发执行，而 <code>lib.rs</code> 没有注册任何 <code>.manage(...)</code> 共享状态。两次重叠的写操作会各自基于旧快照落盘，后写者覆盖前写者 —— 典型的 lost update。当前 UI 用模态框把写操作基本串行化了，所以<b>暂未暴露</b>，但这是一个靠 UI 习惯兜底、而非靠架构兜底的隐患。</p>
+      <b>证据</b>
+      <p><code>project.rs</code> 中 <code>create_project_in</code> / <code>update_project_in</code> / <code>delete_project_in</code> 均为「load → mutate → save」；<code>lib.rs</code> 全文无 <code>.manage</code>。</p>
+      <b>修复方向</b>
+      <p>在 Tauri state 中持有 <code>Mutex&lt;Store&gt;</code>（或 <code>Mutex&lt;()&gt;</code> 写锁 + 缓存），让所有变更经过同一个 <code>StoreHandle</code> 窄接口；磁盘 I/O 退化为「加载一次 + 每次变更落盘」。这同时把并发语义收敛到一个可测试的 seam。</p>
+    </div>
+  </div>
+
+  <!-- A2 -->
+  <div class="card def med">
+    <div class="head">
+      <div><h3>A2 · 路径查重规则前后端双实现，且已出现口径不一致</h3></div>
+      <span class="badge b-med">Medium · 逻辑不一致</span>
+    </div>
+    <div class="files"><span>src-tauri/src/project/dedup.rs</span><span>src/lib/paths.ts</span><span>src/components/AddProjectDialog.tsx</span></div>
+    <div class="kv">
+      <b>问题</b>
+      <p>D3「路径查重」在后端有完整的词法规范化（统一分隔符、解析 <code>.</code>/<code>..</code>、相对路径绝对化、去尾分隔符），前端 <code>samePath()</code> 只做了「统一分隔符 + 去尾 + 小写」。前端代码注释也承认没有做 <code>.</code>/<code>..</code> 解析。结果是同一条规则有两个强度不同的实现：<code>D:\a\.\b</code> 这类输入前端判为「不重复」，后端才拦截，用户会在 Step 2 才看到报错（错误信息与前端文案「同口径」的承诺不符）。</p>
+      <b>证据</b>
+      <p><code>dedup.rs::normalize_path</code>（含 <code>resolve_segments</code>）vs <code>paths.ts::samePath</code>（无段解析）；<code>AddProjectDialog.next()</code> 用前端版本做「第一步即拦截」。</p>
+      <b>次要问题</b>
+      <p><code>normalize_path</code> 对相对路径调用 <code>std::env::current_dir()</code>——在 Tauri 中 CWD 是 EXE 所在目录（见 ADR 0004），用户若手输相对路径，会以程序目录为基准绝对化，语义不直观。</p>
+      <b>修复方向</b>
+      <p>让查重成为服务端唯一事实源：新增只读命令 <code>check_path_available(path, excludeId)</code>，Add/Edit 对话框调用它做前置校验；删除 TS 侧的规则副本。</p>
+    </div>
+  </div>
+
+  <!-- A3 -->
+  <div class="card def med">
+    <div class="head">
+      <div><h3>A3 · 「编辑器配置」校验规则被实现三次</h3></div>
+      <span class="badge b-med">Medium · 重复逻辑</span>
+    </div>
+    <div class="files"><span>src-tauri/src/project/settings.rs</span><span>src-tauri/src/launch/mod.rs</span><span>src/lib/theme.ts</span></div>
+    <div class="kv">
+      <b>问题</b>
+      <p>「<code>{path}</code> 占位符恰好出现一次」+「.cmd/.bat 参数不得含双引号」这条规则，存在于三处：<code>EditorProfile::validate</code>（settings.rs）、<code>substitute_editor_path</code> + <code>validate_batch_arguments</code>（launch/mod.rs）、<code>validateEditorProfile</code>（theme.ts）。连错误文案都是逐字复制。任何口径调整（例如将来允许多个占位符）都需要同步改三处，且没有任何机制保证它们一致。</p>
+      <b>证据</b>
+      <p>三处均出现字符串 <code>"editor.arguments must contain exactly one {path} placeholder when editor.executable is configured"</code>。</p>
+      <b>修复方向</b>
+      <p>后端收敛为 `EditorProfile` 上的单一深模块（validate + plan 一体），launch 复用同一校验；前端只在提交前做一次「预校验」，文案从共享常量取。</p>
+    </div>
+  </div>
+
+  <!-- A4 -->
+  <div class="card def med">
+    <div class="head">
+      <div><h3>A4 · 默认值与枚举常量跨语言重复定义（6+ 处）</h3></div>
+      <span class="badge b-med">Medium · 漂移风险</span>
+    </div>
+    <div class="files"><span>src-tauri/src/project/settings.rs</span><span>src/lib/appearance.ts</span><span>src/lib/theme.ts</span><span>src/App.tsx</span><span>src/components/SettingsDialog.tsx</span></div>
+    <div class="kv">
+      <b>问题</b>
+      <p>同一组「事实」在多处硬编码：</p>
+      <ul>
+        <li>Windy 中性色：Rust <code>default_light_neutrals()/default_dark_neutrals()</code> vs TS <code>WINDY_NEUTRALS</code>（注释都写着「保持一致」）。</li>
+        <li>风格预设 id：Rust <code>STYLE_PRESETS = ["windy","cloud","ink","midnight"]</code> vs TS <code>STYLE_PRESET_IDS</code>。</li>
+        <li>强调色预设 id：Rust <code>ACCENT_PRESETS</code> vs TS <code>ACCENT_PRESETS</code>。</li>
+        <li>默认 Settings 对象：<code>App.tsx::DEFAULT_SETTINGS</code> 与 <code>SettingsDialog.tsx::DEFAULT_SETTINGS</code> 各写一份（内容相同）。</li>
+      </ul>
+      <p>跨语言重复无法完全消除，但目前是「靠注释约定」而非「靠结构保证」，属于典型的静默漂移点。</p>
+      <b>修复方向</b>
+      <p>（1）前端两个 <code>DEFAULT_SETTINGS</code> 合并为一个导出；（2）跨语言常量考虑由单一 JSON/生成器产出（例如把预设 id 与中性色落到一处构建期产物，Rust 与 TS 都消费），至少加一条「契约测试」断言两端的字面量相等，让漂移可被测试捕获。</p>
+    </div>
+  </div>
+
+  <!-- A5 -->
+  <div class="card def low">
+    <div class="head">
+      <div><h3>A5 · 死代码 / 仅测试使用的导出</h3></div>
+      <span class="badge b-low">Low · 坏味道</span>
+    </div>
+    <div class="files"><span>src/lib/theme.ts</span><span>src/components/Icon.tsx</span><span>src/lib/theme.test.ts</span><span>src/lib/iconUi.test.ts</span></div>
+    <div class="kv">
+      <b>问题</b>
+      <ul>
+        <li><code>windowsBgrDwordToCss</code>（theme.ts）：生产代码从未调用，只在 <code>theme.test.ts</code> 里被断言；真正的转换在 Rust <code>windows_bgr_dword_to_css_hex</code>。这是「为测试而存在的镜像实现」。</li>
+        <li><code>selectAccentColor</code>（theme.ts）：同样仅测试使用。</li>
+        <li><code>ICON_NAMES</code>（Icon.tsx）：全仓库唯一出现处就是它自己的定义，完全未使用；而 <code>iconUi.test.ts</code> 反而把 41 个图标名<b>手抄了一份</b>到测试里 —— 两个列表将来必然漂移。</li>
+      </ul>
+      <b>修复方向</b>
+      <p>删除 <code>ICON_NAMES</code> 与两个 test-only 导出（或让测试直接依赖生产语义）；<code>iconUi.test</code> 改为 <code>import { ICON_NAMES }</code> 或改为行为断言。</p>
+    </div>
+  </div>
+
+  <!-- A6 -->
+  <div class="card def low">
+    <div class="head">
+      <div><h3>A6 · 契约测试是「读源码字符串匹配」而非行为测试</h3></div>
+      <span class="badge b-low">Low · 测试质量</span>
+    </div>
+    <div class="files"><span>src/lib/iconUi.test.ts</span></div>
+    <div class="kv">
+      <b>问题</b>
+      <p><code>iconUi.test.ts</code> 通过 <code>readFileSync</code> 读 <code>Icon.tsx</code>/<code>App.css</code> 源码，断言其中包含某些子串。这类测试无法证明渲染结果正确，却会在无关重构（改名、换行、格式化）时误报，并且给「已覆盖 UI」的错觉。</p>
+      <b>修复方向</b>
+      <p>保留少量「可访问性契约」断言即可，其余改为组件行为测试（见 B6）。</p>
+    </div>
+  </div>
+
+  <!-- A7 -->
+  <div class="card def low">
+    <div class="head">
+      <div><h3>A7 · <code>hasExactKeys</code> 每轮就地排序，且会改写传入数组</h3></div>
+      <span class="badge b-low">Low · 坏味道</span>
+    </div>
+    <div class="files"><span>src/lib/theme.ts</span></div>
+    <div class="kv">
+      <b>问题</b>
+      <p><code>keys.sort()</code> 写在 <code>.every()</code> 回调里，每次迭代都调用一次（并就地改写调用方传入的数组）。当前因为 <code>keys</code> 都是当场新建的字面量所以没出问题，但既低效又容易被后人误用。</p>
+      <b>修复方向</b>
+      <p>排序移出回调，先 <code>const sorted = [...keys].sort()</code> 再比较。</p>
+    </div>
+  </div>
+
+  <!-- A8 -->
+  <div class="card def low">
+    <div class="head">
+      <div><h3>A8 · 主题预览存在「双路径应用」与冗余 effect 依赖</h3></div>
+      <span class="badge b-low">Low · 坏味道</span>
+    </div>
+    <div class="files"><span>src/App.tsx</span></div>
+    <div class="kv">
+      <b>问题</b>
+      <p><code>previewSettingsTheme</code> 既调用 <code>previewTheme()</code>（立即写 DOM 变量），又 <code>setSettingsPreview()</code> 触发一个会在下一帧再次 <code>applyTheme</code> 的 effect —— 同一份预览被应用两次。<code>settingsPreviewState</code> 被列进 effect 依赖，但 effect 函数体根本没读它。</p>
+      <b>修复方向</b>
+      <p>二选一：只保留 state 驱动的 effect（更符合 React 心智），或只保留命令式 <code>previewTheme</code>。清理无用依赖。</p>
+    </div>
+  </div>
+
+  <!-- A9 -->
+  <div class="card def low">
+    <div class="head">
+      <div><h3>A9 · 单次扫描重复枚举同一目录（3 趟 read_dir）</h3></div>
+      <span class="badge low b-low">Low · 性能</span>
+    </div>
+    <div class="files"><span>src-tauri/src/scanner/mod.rs</span></div>
+    <div class="kv">
+      <b>问题</b>
+      <p><code>scan_project_path</code> 依次调用 <code>detect_project_type</code>、<code>detect_tech_stack</code>、<code>detect_activity</code>，其中 tech stack 与 activity（以及 <code>has_file_with_ext</code>）各自 <code>read_dir</code> 同一根目录。单项目多趟枚举，项目多、目录大时可省。</p>
+      <b>修复方向</b>
+      <p>扫描入口做一次 <code>read_dir</code>，把条目切片传给各检测函数。</p>
+    </div>
+  </div>
+
+  <!-- A10 -->
+  <div class="card def low">
+    <div class="head">
+      <div><h3>A10 · 前端扫描结果缺少请求代际保护（与既有模式不一致）</h3></div>
+      <span class="badge b-low">Low · 一致性</span>
+    </div>
+    <div class="files"><span>src/App.tsx</span><span>src/lib/settingsUi.ts</span></div>
+    <div class="kv">
+      <b>问题</b>
+      <p>设置相关的异步读取都用了 <code>createRequestGeneration()</code> 防竞态，但卡片扫描 <code>scanOne</code> 没有：快速连点「Rescan」时，较早的慢请求可能覆盖较新的结果；删除项目后到达的扫描结果也会写进 <code>scans</code>（无害但冗余）。既有抽象未被一致使用。</p>
+      <b>修复方向</b>
+      <p><code>scanOne</code> 复用 <code>createRequestGeneration</code>，或改为按 id 记录代际。</p>
+    </div>
+  </div>
+
+  <!-- A11 -->
+  <div class="card def info">
+    <div class="head">
+      <div><h3>A11 · 扫描类子进程无超时保护</h3></div>
+      <span class="badge b-info">Info · 硬化</span>
+    </div>
+    <div class="files"><span>src-tauri/src/git/mod.rs</span><span>src-tauri/src/commands/system.rs</span></div>
+    <div class="kv">
+      <b>问题</b>
+      <p><code>run_git</code> 与 <code>run_command_capture</code> 都用 <code>Command::output()</code>，无超时。若 <code>git</code>/<code>reg</code>/<code>where</code> 挂起（网络盘上的 git、注册表被锁），会一直占住该命令线程。启动类命令受 ADR 0002 约束（detached、不等待），但扫描类没有对应约定。</p>
+      <b>修复方向</b>
+      <p>为扫描子进程加一个上限（例如 5s）并用 <code>wait_timeout</code>/kill 兜底，或至少记录此约束到 ADR。</p>
+    </div>
+  </div>
+
+  <!-- ============ PART B ============ -->
+  <h2 id="b">B. 架构深化机会</h2>
+  <p class="sub">使用 codebase-design 词汇（module / interface / depth / seam / adapter / leverage / locality）。每个候选给出「删除测试」判断与前后对比。</p>
+
+  <!-- B1 -->
+  <div class="card">
+    <div class="head">
+      <div><h3>B1 · 拆分浅而巨大的 <code>commands/system.rs</code></h3></div>
+      <span class="badge b-strong">Strong</span>
+    </div>
+    <div class="files"><span>src-tauri/src/commands/system.rs (706 行 / 22 个 pub 项 / 5 类职责)</span></div>
+    <div class="kv">
+      <b>问题</b>
+      <p>一个模块同时承担：注册表文本解析、编辑器产品目录与发现、Windows 强调色读取、子进程捕获、路径规范化。接口面巨大（22 个 public 项），任何改动都要在这个 700 行文件里定位，locality 极差。其中纯函数（<code>parse_registry_query_blocks</code>、<code>deduplicate_detected_editors</code>……）已被大量测试覆盖，说明它们本可以是独立的深模块。</p>
+      <b>方案</b>
+      <p>按 seam 拆成 4 个窄而深的模块：<code>system/registry.rs</code>（解析）、<code>system/editors.rs</code>（产品目录 + 发现管线）、<code>system/accent.rs</code>（强调色）、<code>system/exec.rs</code>（子进程捕获）。<code>detect_editors</code> 只依赖这四者的窄接口。</p>
+      <b>收益（locality &amp; leverage）</b>
+      <p>每个模块一个概念，改注册表解析不必再扫过强调色代码；子进程捕获（A11 的超时改造点）成为唯一收口；现有测试可原样平移，杠杆率不变而认知负担显著下降。</p>
+    </div>
+    <div class="mrow">
+      <div class="col before"><div class="ttl">Before · 一个浅模块吞下 5 件事</div>
+        <div class="stack">
+          <span class="node bad">commands/system.rs 706 行</span>
+          <span class="node bad">├ registry parse / editors / accent / exec / path</span>
+          <span class="node bad">└ 22 pub 项 · 改动半径 = 全文件</span>
+        </div></div>
+      <div class="mid">→</div>
+      <div class="col after"><div class="ttl">After · 4 个深模块 + 一个编排壳</div>
+        <div class="stack">
+          <span class="node good">system/registry.rs</span>
+          <span class="node good">system/editors.rs</span>
+          <span class="node good">system/accent.rs</span>
+          <span class="node good">system/exec.rs</span>
+          <span class="node good">detect_editors() 只做编排</span>
+        </div></div>
+    </div>
+  </div>
+
+  <!-- B2 -->
+  <div class="card">
+    <div class="head">
+      <div><h3>B2 · 把「编辑器配置规则」收敛为一个深模块</h3></div>
+      <span class="badge b-strong">Strong</span>
+    </div>
+    <div class="files"><span>src-tauri/src/project/settings.rs</span><span>src-tauri/src/launch/mod.rs</span><span>src/lib/theme.ts</span></div>
+    <div class="kv">
+      <b>问题</b>
+      <p>见 A3。规则的「接口」（validate + plan）被拆散在两个后端文件与一个前端文件里，且文案逐字重复。这是典型的浅 seam：调用方必须知道散落各处的约束。</p>
+      <b>方案</b>
+      <p>定义 <code>EditorProfile</code> 深模块：对外只暴露 <code>validate()</code> 与 <code>plan(path) -&gt; LaunchPlan</code>，把占位符替换、批处理引号校验、cmd.exe 包装全部藏在实现里。launch 只调用 <code>plan()</code>，settings 只调用 <code>validate()</code>，两者是同一实现的两个入口。</p>
+      <b>收益</b>
+      <p>规则只存在于一处，「接口即测试面」—— 针对 <code>plan()</code> 的测试同时覆盖了校验与启动组装；将来扩展（多占位符、更多 shell）只改一个深模块。</p>
+    </div>
+    <div class="mrow">
+      <div class="col before"><div class="ttl">Before · 同一规则三份实现</div>
+        <div class="stack">
+          <span class="node bad">settings.rs::validate()</span>
+          <span class="node bad">launch::substitute_editor_path()</span>
+          <span class="node bad">launch::validate_batch_arguments()</span>
+          <span class="node bad">theme.ts::validateEditorProfile()</span>
+        </div></div>
+      <div class="mid">→</div>
+      <div class="col after"><div class="ttl">After · 一个深模块两个入口</div>
+        <div class="stack">
+          <span class="node good">EditorProfile::validate()</span>
+          <span class="node good">EditorProfile::plan(path)</span>
+          <span class="node">├ 占位符替换</span>
+          <span class="node">├ 批处理引号校验</span>
+          <span class="node">└ cmd.exe 包装</span>
+        </div></div>
+    </div>
+  </div>
+
+  <!-- B3 -->
+  <div class="card">
+    <div class="head">
+      <div><h3>B3 · 把 <code>App.tsx</code> 的状态编排抽成 hook 模块</h3></div>
+      <span class="badge b-worth">Worth exploring</span>
+    </div>
+    <div class="files"><span>src/App.tsx (402 行 / 15 个 useState)</span></div>
+    <div class="kv">
+      <b>问题</b>
+      <p>App 组件同时持有 projects、scans、dialogs、toast、settings、settingsError、windowsAccent、preview 状态与四类副作用。这是整个前端唯一没有对应测试文件的「逻辑集中地」，任何一处改动都要在 400 行里往返。</p>
+      <b>方案</b>
+      <p>抽出 <code>useProjects()</code>（列表 + CRUD 乐观更新）、<code>useScans()</code>（扫描生命周期 + 代际保护，一并修 A10）、<code>useSettings()</code>（加载/保存/回退）、<code>useThemePreview()</code>（捕获/预览/还原，一并修 A8）。App 退化为布局与 props 装配。</p>
+      <b>收益</b>
+      <p>每个 hook 是可用 <code>renderHook</code> 测试的深模块；状态迁移的复杂度从「组件内隐式」变成「hook 接口显式」。这是提升前端 AI-navigability 性价比最高的一步。</p>
+    </div>
+  </div>
+
+  <!-- B4 -->
+  <div class="card">
+    <div class="head">
+      <div><h3>B4 · 路径查重（D3）建立单一事实源</h3></div>
+      <span class="badge b-worth">Worth exploring</span>
+    </div>
+    <div class="files"><span>src-tauri/src/project/dedup.rs</span><span>src/lib/paths.ts</span></div>
+    <div class="kv">
+      <b>问题</b>
+      <p>见 A2。纯前端副本是「假 seam」（one adapter = hypothetical）：它存在的唯一理由是为了更早报错，却带来了口径漂移。</p>
+      <b>方案</b>
+      <p>删除前端规则副本，改为调用只读命令 <code>check_path_available</code>。前端只负责触发与展示，规范化与比较完全由后端 <code>dedup</code> 这个深模块负责。</p>
+      <b>收益</b>
+      <p>删除测试成立：删掉 TS 实现后复杂度集中到唯一的 <code>dedup</code>，而不是被搬来搬去。测试面回到后端一处。</p>
+    </div>
+  </div>
+
+  <!-- B5 -->
+  <div class="card">
+    <div class="head">
+      <div><h3>B5 · 简化 PowerShell 命令包装启发式</h3></div>
+      <span class="badge b-spec">Speculative</span>
+    </div>
+    <div class="files"><span>src-tauri/src/launch/mod.rs</span></div>
+    <div class="kv">
+      <b>问题</b>
+      <p><code>quote_pwsh_command</code> 及其辅助函数用约 150 行启发式判断「命令首段是不是路径」（盘符 / UNC / 相对 / 已知扩展名 / 真实存在的文件），再决定是否用 <code>&amp; '...'</code> 包裹。它是 load-bearing 的（删掉则含空格路径会被 PowerShell 按空格切开），但复杂度与脆弱度都高，属于「为了兜底而过度设计」的临界点。</p>
+      <b>方案（待评估）</b>
+      <p>评估能否让用户把「可执行 + 参数」表达为结构化输入，从而用 PowerShell 的调用运算符/参数向量直接构造，而不是事后猜测纯文本。若产品上不接受结构化输入，则维持现状但把启发式收敛到单一纯函数并补齐边界测试（目前已有 38 项 launch 测试，基础良好）。</p>
+      <b>收益</b>
+      <p>若可简化，能消除一整类「命令文本被误切」的边缘 bug 面。</p>
+    </div>
+  </div>
+
+  <!-- B6 -->
+  <div class="card">
+    <div class="head">
+      <div><h3>B6 · 为关键交互补组件测试 seam</h3></div>
+      <span class="badge b-worth">Worth exploring</span>
+    </div>
+    <div class="files"><span>src/components/*.tsx</span><span>src/pages/ProjectDetail.tsx</span></div>
+    <div class="kv">
+      <b>问题</b>
+      <p>当前 <code>src/</code> 下测试全部落在 <code>lib/</code>（纯逻辑）+ 两个「读源码字符串」的契约测试；组件与页面零行为测试。而 Add 对话框的两步流程、Settings 的预览/还原/重置、ProjectCard 的降级渲染，恰恰是 bug 最易藏身处。</p>
+      <b>方案</b>
+      <p>用 Testing Library 为 AddProjectDialog（两步 + 查重拦截）、SettingsDialog（预览-取消-保存）、ProjectCard（loading/error/ok 三态）写行为测试。IPC 已由 <code>api.ts</code> 这层窄接口封装，mock 成本低 —— 这正是现有 seam 的红利。</p>
+      <b>收益</b>
+      <p>「接口即测试面」：这些组件的接口（props + 用户事件）清晰，适合作为测试面；同时让 A5/A6 里的源码字符串测试可以退役。</p>
+    </div>
+  </div>
+
+  <!-- ============ PART C ============ -->
+  <h2 id="top">C. 首要建议</h2>
+  <div class="top">
+    <h3 style="margin-top:0">先修 A1（存储单一写者），再动 B1（拆分 system.rs），然后 B2/B4 去重。</h3>
+    <p><b>为什么是 A1 先：</b>它是唯一涉及数据正确性的问题，且修复方式恰好就是架构修复 —— 引入一个 <code>StoreHandle</code> 窄接口，既消除丢失更新，又把并发语义收敛成可测试的 seam。投入小、回报明确。</p>
+    <p><b>为什么 B1 第二：</b><code>system.rs</code> 是当前最大的「浅而巨大」模块，706 行、5 类职责、22 个 public 项，是认知与维护成本的主要来源；拆分是纯结构重构，现有 17 项模块测试可直接平移，风险低、性价比高。</p>
+    <p><b>为什么 A3/A4/B2/B4 一起看：</b>它们本质是同一个病灶 —— <b>同一条规则/事实在 seam 两侧被复制</b>。建议合并为一次「去重」工作流：后端建立 <code>EditorProfile</code> 深模块（B2）、路径查重单源化（B4）、契约测试锁住跨语言常量（A4），一次性把「靠注释保持一致」升级为「靠结构/测试保证一致」。</p>
+    <p class="sub" style="margin-bottom:0">不必立刻做：B5（先做技术评估）、A11（硬化项）、A7/A8/A9（随手清理即可）。</p>
+  </div>
+
+  <footer>
+    方法：<code>tsc --noEmit</code> · <code>vitest run</code> · <code>cargo test</code> 全绿；随后对 <code>src/</code> 与 <code>src-tauri/src/</code> 逐文件人工通读，并结合 <code>git log</code> 热点（lib.rs / App.tsx / scanner / SettingsDialog）确定重点区域。
+    术语遵循 <code>codebase-design</code>（module / interface / depth / seam / leverage / locality），领域词遵循 <code>CONTEXT.md</code>。本报告不修改任何仓库文件。
+  </footer>
+
+</div>
+</body>
+</html>

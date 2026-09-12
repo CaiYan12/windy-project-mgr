@@ -1,6 +1,6 @@
 //! D3 路径查重测试：重复路径 / 大小写变体 / 末尾分隔符变体。
 
-use windy_project_mgr_lib::project::dedup::{is_same_path, normalize_path};
+use windy_project_mgr_lib::project::dedup::{is_absolute_path, is_same_path, normalize_path};
 use windy_project_mgr_lib::project::{Project, Store};
 
 fn project(id: &str, path: &str) -> Project {
@@ -56,6 +56,17 @@ fn normalize_makes_relative_path_absolute() {
         normalized.len() >= 3 && &normalized[1..3] == ":\\",
         "normalized path must be absolute (drive-rooted): {normalized}"
     );
+}
+
+#[test]
+fn absolute_path_recognition_matches_windows_semantics() {
+    assert!(is_absolute_path("D:\\projects\\alpha"));
+    assert!(is_absolute_path("d:/projects/alpha"));
+    assert!(is_absolute_path("\\\\server\\share\\alpha"));
+    assert!(!is_absolute_path("projects\\alpha"));
+    assert!(!is_absolute_path(".\\alpha"));
+    assert!(!is_absolute_path("\\alpha"));
+    assert!(!is_absolute_path("alpha"));
 }
 
 #[test]

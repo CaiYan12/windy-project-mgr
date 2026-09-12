@@ -36,6 +36,7 @@ import {
   type AppearanceSettings,
   type StylePreset,
 } from "../lib/appearance";
+import { DEFAULT_SETTINGS } from "../lib/settings";
 
 type SettingsTab = "appearance" | "editor" | "general";
 
@@ -44,16 +45,6 @@ const TABS: ReadonlyArray<{ id: SettingsTab; label: string; icon: IconName }> = 
   { id: "editor", label: "Editor", icon: "code" },
   { id: "general", label: "General", icon: "info" },
 ];
-
-const DEFAULT_SETTINGS: AppSettings = {
-  colorMode: "system",
-  accentColor: DEFAULT_ACCENT_COLOR,
-  appearance: DEFAULT_APPEARANCE,
-  editor: {
-    executable: "",
-    arguments: [...DEFAULT_EDITOR_ARGUMENTS],
-  },
-};
 
 interface SettingsDialogProps {
   settings: AppSettings | null;

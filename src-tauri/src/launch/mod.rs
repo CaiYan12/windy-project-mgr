@@ -9,7 +9,7 @@
 use std::fmt;
 use std::path::{Path, PathBuf};
 
-use crate::project::settings::{is_batch_executable, EditorProfile};
+use crate::project::settings::{is_batch_executable, EditorProfile, EditorProfileError};
 
 #[cfg(windows)]
 use std::os::windows::process::CommandExt;
@@ -208,16 +208,15 @@ fn has_known_path_extension(value: &str) -> bool {
         })
 }
 
-/// 在编辑器中打开的计划（D6）：接受完整 `EditorProfile` 并替换唯一 `{path}`。
+/// 在编辑器中打开的计划（D6）：接受完整 `EditorProfile`，
+/// 参数解算（占位符替换 / 批处理约束）统一委派给 [`EditorProfile::resolve_arguments`]（B2）。
 pub fn editor_plan(profile: &EditorProfile, path: &Path) -> Result<LaunchPlan, LaunchError> {
     let executable = profile.executable.trim();
-    if executable.is_empty() {
-        return Err(LaunchError::EditorNotConfigured);
-    }
-
-    let substituted_args = substitute_editor_path(&profile.arguments, path)?;
+    let substituted_args = profile.resolve_arguments(path).map_err(|error| match error {
+        EditorProfileError::NotConfigured => LaunchError::EditorNotConfigured,
+        EditorProfileError::Invalid { detail } => LaunchError::InvalidEditorProfile { detail },
+    })?;
     if is_batch_executable(executable) {
-        validate_batch_arguments(&substituted_args)?;
         return Ok(build_cmd_script_plan(
             executable,
             &substituted_args,
@@ -251,35 +250,6 @@ fn require_dir(path: &Path) -> Result<(), LaunchError> {
             path: path.to_path_buf(),
         }),
     }
-}
-
-fn substitute_editor_path(arguments: &[String], path: &Path) -> Result<Vec<String>, LaunchError> {
-    const PLACEHOLDER: &str = "{path}";
-
-    let placeholder_count: usize = arguments
-        .iter()
-        .map(|arg| arg.matches(PLACEHOLDER).count())
-        .sum();
-    if placeholder_count != 1 {
-        return Err(LaunchError::InvalidEditorProfile {
-            detail: "editor.arguments must contain exactly one {path} placeholder when editor.executable is configured".to_string(),
-        });
-    }
-
-    let path_string = path.display().to_string();
-    Ok(arguments
-        .iter()
-        .map(|arg| arg.replacen(PLACEHOLDER, &path_string, 1))
-        .collect())
-}
-
-fn validate_batch_arguments(arguments: &[String]) -> Result<(), LaunchError> {
-    if arguments.iter().any(|argument| argument.contains('"')) {
-        return Err(LaunchError::InvalidEditorProfile {
-            detail: "cmd.exe batch arguments cannot contain the double quote character".to_string(),
-        });
-    }
-    Ok(())
 }
 
 fn build_cmd_script_plan(executable: &str, arguments: &[String], cwd: &Path) -> LaunchPlan {

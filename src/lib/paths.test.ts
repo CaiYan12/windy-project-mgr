@@ -1,7 +1,7 @@
-// 路径纯逻辑测试（D10 name 自动填充 + D3 前端查重）。
+// 路径纯逻辑测试（D10 name 自动填充）。D3 路径查重已移往后端（ADR 0007）。
 
 import { describe, expect, it } from "vitest";
-import { lastSegment, samePath } from "./paths";
+import { lastSegment } from "./paths";
 
 describe("lastSegment", () => {
   it("takes the last segment of windows paths", () => {
@@ -20,27 +20,5 @@ describe("lastSegment", () => {
   it("returns empty for empty or separator-only input", () => {
     expect(lastSegment("")).toBe("");
     expect(lastSegment("\\")).toBe("");
-  });
-});
-
-describe("samePath", () => {
-  it("matches identical paths case-sensitively", () => {
-    expect(samePath("d:\\Dev\\app", "d:\\Dev\\app")).toBe(true);
-  });
-
-  it("matches case-insensitively (Windows semantics)", () => {
-    expect(samePath("d:\\Dev\\app", "d:\\dev\\APP")).toBe(true);
-  });
-
-  it("ignores a trailing separator", () => {
-    expect(samePath("d:\\Dev\\app\\", "d:\\Dev\\app")).toBe(true);
-  });
-
-  it("treats forward and back slashes as equal", () => {
-    expect(samePath("d:/Dev/app", "d:\\Dev\\app")).toBe(true);
-  });
-
-  it("rejects different paths", () => {
-    expect(samePath("d:\\Dev\\app", "d:\\Dev\\other")).toBe(false);
   });
 });

@@ -1,13 +1,13 @@
 // 两步 Add Dialog（D10）：Step 1 基础信息（路径选定后 name 自动取末段、可编辑；
-// 路径校验 + 查重由后端承接），Step 2 启动脚本引导（D5，可跳过）。
+// 路径查重以后端为唯一事实源，见 ADR 0007），Step 2 启动脚本引导（D5，可跳过）。
 
 import { useState } from "react";
 import { open as openFilePicker } from "@tauri-apps/plugin-dialog";
 import { Modal } from "./Modal";
 import { Icon } from "./Icon";
 import { parseTags, ProjectFields, type ProjectFormState } from "./ProjectFields";
-import { createProject, listScripts } from "../lib/api";
-import { lastSegment, samePath } from "../lib/paths";
+import { checkPathAvailable, createProject, listScripts, type PathAvailability } from "../lib/api";
+import { lastSegment } from "../lib/paths";
 import type { Project, StartupScript } from "../types/project";
 
 const emptyForm: ProjectFormState = {
@@ -20,11 +20,9 @@ const emptyForm: ProjectFormState = {
 };
 
 export function AddProjectDialog({
-  projects,
   onClose,
   onCreated,
 }: {
-  projects: Project[];
   onClose: () => void;
   onCreated: (project: Project) => void;
 }) {
@@ -54,20 +52,34 @@ export function AddProjectDialog({
 
   async function next() {
     setError(null);
-    if (!form.path.trim() || !form.name.trim()) {
+    const path = form.path.trim();
+    if (!path || !form.name.trim()) {
       setError("Path and name are required.");
       return;
     }
-    // D3：路径查重在第一步即拦截（与后端提交校验同口径，文案一致），
-    // 避免用户走到脚本引导页才得知重复。
-    const dup = projects.find((p) => samePath(p.path, form.path.trim()));
-    if (dup) {
-      setError(`duplicate project path: ${dup.path} (edit the existing record instead)`);
+    setBusy(true);
+    // D3：路径查重以后端为唯一事实源（ADR 0007）。第一步即拦截绝对路径与重复，
+    // 避免用户走到脚本引导页才得知问题。
+    let availability: PathAvailability;
+    try {
+      availability = await checkPathAvailable(path);
+    } catch (e) {
+      setBusy(false);
+      setError(String(e));
       return;
     }
-    setBusy(true);
+    if (availability.status === "notAbsolute") {
+      setBusy(false);
+      setError(`path must be absolute: ${path}`);
+      return;
+    }
+    if (availability.status === "duplicate") {
+      setBusy(false);
+      setError(`duplicate project path: ${availability.path} (edit the existing record instead)`);
+      return;
+    }
     try {
-      const list = await listScripts(form.path.trim());
+      const list = await listScripts(path);
       setScripts(list);
       setPicked(null);
       setScriptsError(null);
@@ -76,7 +88,7 @@ export function AddProjectDialog({
     } catch (e) {
       const msg = String(e);
       if (msg.toLowerCase().includes("path not found")) {
-        setError("Path not found: " + form.path.trim());
+        setError("Path not found: " + path);
       } else {
         // 枚举失败不阻断添加：进入 Step 2 并提示。
         setScripts([]);
@@ -128,9 +140,7 @@ export function AddProjectDialog({
     }
   }
 
-  const options: StartupScript[] = picked
-    ? [...scripts, picked]
-    : scripts;
+  const options: StartupScript[] = picked ? [...scripts, picked] : scripts;
 
   return (
     <Modal
@@ -215,7 +225,7 @@ export function AddProjectDialog({
                 name="startup-script"
                 checked={selected === null}
                 onChange={() => setSelected(null)}
-                />
+              />
               <span className="script-name">
                 <Icon name="ban" size={16} />
                 <span>None</span>

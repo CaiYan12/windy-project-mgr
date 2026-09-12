@@ -67,6 +67,22 @@ export function deleteProject(id: string): Promise<void> {
   return invoke<void>("delete_project", { id });
 }
 
+/**
+ * 路径可用性三态（D3 / ADR 0007）：Step 1 一次调用即可区分
+ * 「可用 / 重复 / 非绝对」，规则由后端唯一裁定。
+ */
+export type PathAvailability =
+  | { status: "available" }
+  | { status: "duplicate"; path: string }
+  | { status: "notAbsolute" };
+
+export function checkPathAvailable(
+  path: string,
+  excludeId?: string,
+): Promise<PathAvailability> {
+  return invoke<PathAvailability>("check_path_available", { path, excludeId });
+}
+
 export function scanProject(path: string): Promise<ProjectMetadata> {
   return invoke<ProjectMetadata>("scan_project", { path });
 }

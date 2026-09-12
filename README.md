@@ -71,3 +71,18 @@ Rust (Tauri 2)
 - Plugin Scanner
 - AI Summary
 - 扫描结果持久化缓存与 TTL
+
+## 远期规划（架构与代码质量）
+
+来源：2026-09-11 全局架构巡检（`architecture-review-2026-09-11.html`）。以下为巡检发现中**未纳入当前加固计划**的项，暂存于此便于将来排期；当前计划见 `docs/superpowers/plans/2026-09-11-architecture-hardening.md`。
+
+- **A5 死代码清理**：`theme.ts` 的 `windowsBgrDwordToCss`、`selectAccentColor` 仅测试使用；`Icon.tsx` 的 `ICON_NAMES` 完全未用（测试另抄了一份图标列表）。删除或复用可减少漂移。
+- **A6 契约测试改为行为测试**：`iconUi.test.ts` 通过读取源码字符串断言，无法证明渲染正确且易误报；改为组件行为测试更可靠。
+- **A7 `hasExactKeys` 清理**：`theme.ts` 在 `.every` 回调内就地 `sort()`，低效且会改写传入数组；排序移出回调即可。
+- **A8 主题预览双路径**：`App.tsx` 中 `previewTheme()` 与 effect 各应用一次预览，且存在无用 effect 依赖；二选一即可。
+- **A9 扫描重复枚举**：`scanner/mod.rs` 对同一根目录 `read_dir` 三趟；单次枚举后分发可省。
+- **A10 扫描代际保护**：`scanOne` 未复用 `createRequestGeneration`，快速重扫可能出现旧结果覆盖新结果；与设置模块保持一致。
+- **A11 子进程超时**：`git`/`reg`/`where` 调用无超时，挂起会占住命令线程；建议加上限与兜底。
+- **B3 App.tsx 状态编排抽 hook**：`App.tsx`（约 400 行 / 15 个 state）可拆为 `useProjects` / `useScans` / `useSettings` / `useThemePreview`，提升可测试性与可导航性。
+- **B5 PowerShell 包装启发式评估**：`launch/mod.rs` 约 150 行路径判断启发式，评估能否简化为结构化输入。
+- **B6 组件行为测试**：Add/Settings/ProjectCard 等关键交互目前无行为测试，可借现有 IPC 窄接口补上。

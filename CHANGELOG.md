@@ -6,6 +6,17 @@ MVP 完成前无正式版本号，变更记于 `Unreleased`。
 
 ## Unreleased
 
+### 2026-09-12 — Computer Use 真实窗口验收与入口恢复
+
+- 前一轮使用浏览器专用 `cua_repl` 时仅得到 `apps: []`；改用已配置的 `mcp__node_repl__js` + `@oai/sky` 后，`list_windows`、截图、坐标点击和键盘输入均恢复，按交接清单执行真实窗口验收。
+- B1/B2/B4/B5/B6、C1/C2、D1–D5、E1/E2、F1/F2、G1/G2 通过；初始 B3 的 `src-tauri\src` 契约差异已修复，后续定向复测显示 `path must be absolute: src-tauri\src`；A1 首帧骨架未捕获，G3 因禁止访问 `%APPDATA%` 未检查。
+- 已删除全部本次测试记录，最终恢复为原始 3 条项目；确认删除后项目目录仍存在。未触碰既有 `data\\` 内容、未执行 `cargo clean`，并已停止本次启动的开发进程树。
+
+### 2026-09-12 — B3 路径校验修复后定向复测
+
+- 通过原生 `mcp__node_repl__js` + `@oai/sky` 真实窗口复测 B2/B3：`.\app` 与 `src-tauri\src` 均在 Add Step 1 显示 `path must be absolute: <输入>`，未进入 Step 2。
+- 弹窗关闭后确认项目列表仍为原始 3 条；本次未新增记录，开发进程与 1420 端口已停止/释放。
+
 ### 2026-08-30 — 结构级 UI 焕新（网易云语法）+ 主题工坊（settings v3）
 
 - **设计令牌重构**：新中性色板（亮 `#f5f6f8` 系 / 暗 `#121417` 系）、三档阴影（rest / hover / overlay）、动效令牌（120 / 180 / 280ms + `--ease-out` / `--ease-spring`）；侧栏落于 `--bg` 与内容区分层，卡片 / 面板落于 `--surface`；导航选中态改为实心 accent 胶囊 + `on-accent` 文字；全局 `--r-lg` 16px 对话框 + 背景 blur（reduced-motion 关闭）；toast 改为底部居中深色胶囊。

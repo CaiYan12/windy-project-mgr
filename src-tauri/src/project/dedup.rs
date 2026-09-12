@@ -84,6 +84,20 @@ pub fn is_same_path(a: &str, b: &str) -> bool {
     normalize_path(a).eq_ignore_ascii_case(&normalize_path(b))
 }
 
+/// 是否为绝对路径（Windows 语义）：盘符根 `X:\` 或 UNC `\\server\share`。
+/// 注意：这是「完全限定」判定，比 [`make_absolute`] 的「有根（含 `\foo` 根相对）」
+/// 更严格——根相对路径仍会被拒绝。供命令层入口拒绝相对路径（ADR 0007），
+/// 避免 `normalize_path` 以进程当前目录为基准隐式绝对化。
+pub fn is_absolute_path(raw: &str) -> bool {
+    let unified: String = raw.chars().map(|c| if c == '/' { '\\' } else { c }).collect();
+    let has_drive_root = unified.len() >= 3
+        && unified.as_bytes()[0].is_ascii_alphabetic()
+        && unified.as_bytes()[1] == b':'
+        && unified.as_bytes()[2] == b'\\';
+    let is_unc = unified.starts_with("\\\\");
+    has_drive_root || is_unc
+}
+
 impl Store {
     /// 按路径查找重复记录（排除指定 ID，供 update 自排除使用）。
     pub fn find_duplicate_by_path(&self, path: &str, exclude_id: Option<&str>) -> Option<&Project> {
