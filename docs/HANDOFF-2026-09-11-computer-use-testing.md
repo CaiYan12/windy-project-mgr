@@ -11,7 +11,7 @@
 - 依据文档：
   - 计划：`docs/superpowers/plans/2026-09-11-architecture-hardening.md`（含“实施记录/计划偏差”）。
   - ADR：`docs/adr/0006-single-writer-store.md`、`docs/adr/0007-path-dedup-server-authority.md`。
-  - 领域：`CONTEXT.md`；验收清单：`TESTING.md`。
+  - 领域：`GLOSSARY.md`；验收清单：`TESTING.md`。
 - **约束**：不要提交、不要 `cargo clean`、不要读写 `%APPDATA%`、不要动用户既有 `data\` 数据；测试产生的记录用完请删除。
 
 ## 2. 启动应用（重要：有环境坑）

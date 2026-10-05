@@ -14,7 +14,7 @@
 | Phase | 提交 | 要点 |
 |---|---|---|
 | 0 环境审计 | （无代码提交） | rustup 1.29.0 + rustc/cargo 1.98.0（stable-msvc）；审计表在 `PROJECT_STATUS.md` |
-| 1 项目规划 | `82200eb` | CONTEXT.md / CHANGELOG.md / TESTING.md / docs/adr/0001~0003 |
+| 1 项目规划 | `82200eb` | GLOSSARY.md / CHANGELOG.md / TESTING.md / docs/adr/0001~0003 |
 | 2 工程初始化 | `a77fb42` | create-tauri-app react-ts（pnpm + React 19 + TS 5.8 + Vite 7 + Tauri 2.11.5），dev/build 验证通过 |
 | 3 基础目录 | `6fa841d` | src/{components,pages,lib,types} 与 src-tauri/src/{commands,project,scanner,git} |
 | 4 数据层 | `ded1de7` | projects.json / settings.json Store，原子写，23 测试（TDD） |

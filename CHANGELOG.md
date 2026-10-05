@@ -6,6 +6,10 @@ MVP 完成前无正式版本号，变更记于 `Unreleased`。
 
 ## Unreleased
 
+### 2026-10-05 — 领域词汇文件名调整
+
+- 将领域术语表重命名为 `GLOSSARY.md`；缺失的映射文件未创建。
+
 ### 2026-09-12 — Computer Use 真实窗口验收与入口恢复
 
 - 前一轮使用浏览器专用 `cua_repl` 时仅得到 `apps: []`；改用已配置的 `mcp__node_repl__js` + `@oai/sky` 后，`list_windows`、截图、坐标点击和键盘输入均恢复，按交接清单执行真实窗口验收。
@@ -185,7 +189,7 @@ MVP 完成前无正式版本号，变更记于 `Unreleased`。
 
 ### 2026-08-25 — Phase 1 项目规划
 
-- 新增 `CONTEXT.md`：领域术语表（D13）
+- 新增 `GLOSSARY.md`：领域术语表（D13）
 - 新增 `docs/adr/0001-scan-data-memory-only.md`：扫描数据仅内存、启动全量重扫（D2）
 - 新增 `docs/adr/0002-detached-run-build.md`：Run / Build 分离式启动、不采集退出码（D4）
 - 新增 `docs/adr/0003-css-variable-theming.md`：`data-theme` + CSS 变量主题、默认跟随系统（D1）

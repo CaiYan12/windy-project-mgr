@@ -612,7 +612,7 @@ PHASE 0 STATUS
 
 ```text
 README.md
-CONTEXT.md
+GLOSSARY.md
 ```
 
 其中记录：
@@ -1663,7 +1663,7 @@ What remains
 
 ## D13 Phase 1 文档交付物（grill-with-docs 产物）
 
-- `CONTEXT.md`：术语表（Project / ProjectMetadata / Scanner / Run Command / Editor Command / Theme 等），只含领域术语，不含实现细节。
+- `GLOSSARY.md`：术语表（Project / ProjectMetadata / Scanner / Run Command / Editor Command / Theme 等），只含领域术语，不含实现细节。
 - `docs/adr/0001-scan-data-memory-only.md`：扫描数据不持久化、启动全量重扫的权衡。
 - `docs/adr/0002-detached-run-build.md`：Run / Build 分离式启动、不采集退出码的权衡。
 - `docs/adr/0003-css-variable-theming.md`：`data-theme` + CSS 变量、默认跟随系统的权衡。
@@ -1678,7 +1678,7 @@ What remains
 | Phase | 增量调整 |
 |---|---|
 | 0 | 增加 rustup 安装与验证（本机实测未安装；`winget install Rustlang.Rustup` 或 rustup-init.exe，默认 stable + `x86_64-pc-windows-msvc`），结果记入环境审计表 |
-| 1 | 增加 `CONTEXT.md`、ADR、`TESTING.md` 验收清单骨架（D13）；Settings v2 规格、计划和 ADR 0005 同步归档 |
+| 1 | 增加 `GLOSSARY.md`、ADR、`TESTING.md` 验收清单骨架（D13）；Settings v2 规格、计划和 ADR 0005 同步归档 |
 | 2 | 使用 pnpm 初始化（D11）；确认 `pnpm tauri dev` 与 production build 可用 |
 | 4 | 数据层增加 v2 `settings.json` 读写与 v1 自动迁移，与 `projects.json` 同机制：`version` 字段、写临时文件再替换、损坏可诊断（D6） |
 | 5 | CRUD 增加查重测试用例：重复路径、大小写变体、末尾分隔符变体（D3）；删除确认交互在 Phase 8 UI 层实现 |

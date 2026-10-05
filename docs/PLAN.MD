@@ -15,7 +15,7 @@
 
 ### Phase 1 项目规划
 
-- [x] `README.md` / `CONTEXT.md` / `CHANGELOG.md` 建立
+- [x] `README.md` / `GLOSSARY.md` / `CHANGELOG.md` 建立
 - [x] 基础 3 份 ADR 落盘（`docs/adr/0001~0003`，D13）及 Settings v2 ADR 0005
 - [x] `TESTING.md` 人工验收清单骨架建立
 
@@ -319,7 +319,7 @@ detect_editors / get_windows_accent_color / get_app_info ← Settings v2 增量
 
 ### D13 Phase 1 文档交付物
 
-- `CONTEXT.md`（术语表）、`docs/adr/0001-scan-data-memory-only.md`、`docs/adr/0002-detached-run-build.md`、`docs/adr/0003-css-variable-theming.md`、`TESTING.md` 验收清单骨架
+- `GLOSSARY.md`（术语表）、`docs/adr/0001-scan-data-memory-only.md`、`docs/adr/0002-detached-run-build.md`、`docs/adr/0003-css-variable-theming.md`、`TESTING.md` 验收清单骨架
 
 ### D14 绿色 ZIP 与完全便携数据
 
@@ -335,7 +335,7 @@ detect_editors / get_windows_accent_color / get_app_info ← Settings v2 增量
 | Phase | 内容 | 增量调整（冲突时以本列为准） |
 |---|---|---|
 | 0 环境审计 | 检查 OS/Node/pnpm/Rust/Cargo/Tauri/Git/仓库状态，输出环境表，创建 `PROJECT_STATUS.md` | rustup 安装与验证（见 3.2） |
-| 1 项目规划 | `README.md` / `CONTEXT.md` / `CHANGELOG.md` | 追加基础 ADR、`TESTING.md` 骨架（D13）；Settings v2 规格 / 计划 / ADR 0005 |
+| 1 项目规划 | `README.md` / `GLOSSARY.md` / `CHANGELOG.md` | 追加基础 ADR、`TESTING.md` 骨架（D13）；Settings v2 规格 / 计划 / ADR 0005 |
 | 2 工程初始化 | create-tauri-app 骨架，验证 dev / production build | pnpm（D11）；`pnpm tauri dev` |
 | 3 基础目录 | `src/`（components/pages/lib/types）与 `src-tauri/src/`（commands/project/scanner/git） | 不变；结构服务于代码，可裁剪 |
 | 4 数据层 | Project Store + `projects.json`：Load/Save/Create/Update/Delete/Get；先写测试再实现 | 增加 `settings.json` 读写（D6），同机制 |
@@ -394,7 +394,7 @@ detect_editors / get_windows_accent_color / get_app_info ← Settings v2 增量
 |---|---|---|
 | 原始需求与计划 | 根目录《Windy Project Manager - Primary Request&Plan Document.md》（含第 29~31 节决策扩展） | 已完成 |
 | 本执行计划 | `docs/PLAN.MD` | 已完成 |
-| 术语表 | `CONTEXT.md` | Phase 1 |
+| 术语表 | `GLOSSARY.md` | Phase 1 |
 | ADR：扫描数据仅内存 | `docs/adr/0001-scan-data-memory-only.md` | Phase 1 |
 | ADR：Run/Build 分离启动 | `docs/adr/0002-detached-run-build.md` | Phase 1 |
 | ADR：CSS 变量主题 | `docs/adr/0003-css-variable-theming.md` | Phase 1 |

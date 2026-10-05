@@ -1,4 +1,4 @@
-# CONTEXT.md — 术语表
+# GLOSSARY.md — 术语表
 
 > 本文件仅定义领域术语（D13）；术语背后的决策与实现规范见 `docs/PLAN.MD` 与 `docs/adr/`，原始需求见 `docs/Windy Project Manager - Primary Request&Plan Document.md`。
 
